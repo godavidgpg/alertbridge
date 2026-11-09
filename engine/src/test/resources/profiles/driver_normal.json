@@ -1,0 +1,21 @@
+{
+  "id": "driver_normal",
+  "name": "이운전",
+  "role": "DRIVER",
+  "experience": "NORMAL",
+  "insurance": {
+    "insurer": "한빛손해보험",
+    "policyNo": "HB-2026-0002",
+    "emergencyPhone": "1588-0001",
+    "claimPhone": "1588-0002",
+    "coverages": [
+      "DAEIN_1",
+      "DAEIN_2",
+      "DAEMUL",
+      "JASANG",
+      "JACHA",
+      "EMERGENCY_TOW"
+    ],
+    "freeTowKm": 40
+  }
+}

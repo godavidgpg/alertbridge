@@ -1,0 +1,25 @@
+{
+  "id": "driver_senior",
+  "name": "최어른",
+  "role": "DRIVER",
+  "experience": "SENIOR",
+  "guardianPhone": "010-0000-0000",
+  "guardianAutoNotifyConsent": true,
+  "medicalNote": "당뇨, 인슐린 사용",
+  "medicalShareConsent": true,
+  "insurance": {
+    "insurer": "한빛손해보험",
+    "policyNo": "HB-2026-0004",
+    "emergencyPhone": "1588-0001",
+    "claimPhone": "1588-0002",
+    "coverages": [
+      "DAEIN_1",
+      "DAEIN_2",
+      "DAEMUL",
+      "JASIN",
+      "JACHA",
+      "EMERGENCY_TOW"
+    ],
+    "freeTowKm": 40
+  }
+}

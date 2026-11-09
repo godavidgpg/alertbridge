@@ -1,0 +1,103 @@
+{
+  "id": "S11_contact_no_receipt",
+  "description": "연결 버튼만 누르고 접수번호를 입력하지 않음",
+  "profile": "profiles/driver_normal.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    }
+  ],
+  "userActions": [
+    {
+      "type": "ManualReport",
+      "tMs": 10000
+    },
+    {
+      "type": "SupportSelected",
+      "actionId": "CALL_INSURER_CLAIM",
+      "tMs": 20000
+    },
+    {
+      "type": "ContactAttempted",
+      "actionId": "CALL_INSURER_CLAIM",
+      "tMs": 21000
+    }
+  ],
+  "expected": {
+    "grades": [
+      "R3"
+    ],
+    "session": "CONTACT_ATTEMPTED",
+    "actionStatus": {
+      "CALL_INSURER_CLAIM": "CONTACT_ATTEMPTED"
+    },
+    "hasCaseCard": true
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

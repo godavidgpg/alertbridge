@@ -1,0 +1,127 @@
+{
+  "id": "S03_airbag_rear_unbelted",
+  "description": "도심 교차로 측면 충돌, 운전석 측면 에어백 전개, 뒷좌석 우측 벨트 미착용",
+  "profile": "profiles/driver_novice_with_jacha.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 42.0
+      }
+    },
+    {
+      "tMs": 59000,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true,
+        "parkingBrakeOn": false
+      }
+    },
+    {
+      "tMs": 59400,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": true,
+        "airbagKind": "SIDE"
+      }
+    },
+    {
+      "tMs": 60500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 61000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 65000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 70000,
+      "question": "INJURY",
+      "answer": "UNSURE"
+    }
+  ],
+  "expected": {
+    "trigger": "T_AIRBAG",
+    "severity": "S3",
+    "grades": [
+      "R0"
+    ],
+    "firstAction": "CALL_119",
+    "impactZonesContain": [
+      "LEFT"
+    ],
+    "occupantsFlagged": [
+      "ROW2_RIGHT:UNBELTED"
+    ],
+    "airbag": "YES",
+    "scriptContains": [
+      "에어백",
+      "안전벨트",
+      "탑승자 2명",
+      "뒷좌석 오른쪽"
+    ],
+    "hasCaseCard": true
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

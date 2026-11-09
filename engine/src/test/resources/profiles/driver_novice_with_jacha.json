@@ -1,0 +1,21 @@
+{
+  "id": "driver_novice",
+  "name": "김초보",
+  "role": "DRIVER",
+  "experience": "NOVICE",
+  "insurance": {
+    "insurer": "한빛손해보험",
+    "policyNo": "HB-2026-0001",
+    "emergencyPhone": "1588-0001",
+    "claimPhone": "1588-0002",
+    "coverages": [
+      "DAEIN_1",
+      "DAEIN_2",
+      "DAEMUL",
+      "JASIN",
+      "JACHA",
+      "EMERGENCY_TOW"
+    ],
+    "freeTowKm": 40
+  }
+}

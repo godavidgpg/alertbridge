@@ -1,0 +1,139 @@
+{
+  "id": "S12_not_accident",
+  "description": "급정차 후 확인 질문에 아니오",
+  "profile": "profiles/driver_normal.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    },
+    {
+      "tMs": 57500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 59600,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 60000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 60600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 61100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 20.0
+      }
+    },
+    {
+      "tMs": 62100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 10.0
+      }
+    },
+    {
+      "tMs": 63600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 65000,
+      "question": "IS_ACCIDENT",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_HARD_STOP",
+    "session": "DISMISSED",
+    "grades": [],
+    "hasCaseCard": false
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 실시간 모드의 위치 입력 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 역지오코딩(좌표 → 주소) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        직접 발신 권한은 선언하지 않는다. 전화는 번호만 띄우고 사용자가 누른다.
+        PleosSignalSource를 붙일 때 App Market과 승인된 범위에서 아래를 추가한다.
+        pleos.car.permission.CAR_SAFETY, CAR_SEATS, CAR_DOORS, CAR_LIGHTS, CAR_DRIVE, CAR_ENERGY, CAR_INFO
+        android.car.permission.CAR_SPEED
+    -->
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

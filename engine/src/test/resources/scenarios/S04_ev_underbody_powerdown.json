@@ -1,0 +1,168 @@
+{
+  "id": "S04_ev_underbody_powerdown",
+  "description": "전기차 하부 충격 후 출력 제한 경고 신규, 배터리 특약 없음",
+  "profile": "profiles/driver_ev_no_battery_cover.json",
+  "vehicle": {
+    "powertrain": "EV",
+    "sizeClass": "SMALL"
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "EvStateOfCharge",
+        "percent": 72.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    },
+    {
+      "tMs": 57500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 59600,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 60000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 60600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 61100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 20.0
+      }
+    },
+    {
+      "tMs": 61500,
+      "signal": {
+        "type": "PowerDownWarning",
+        "on": true
+      }
+    },
+    {
+      "tMs": 62100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 10.0
+      }
+    },
+    {
+      "tMs": 63600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 66000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    }
+  ],
+  "expected": {
+    "severity": "S2",
+    "drivable": "NO",
+    "evRisk": true,
+    "grades": [
+      "R0"
+    ],
+    "firstAction": "CALL_119",
+    "impactZonesContain": [
+      "UNDERBODY"
+    ],
+    "gapContains": [
+      "227만 원",
+      "307만 원",
+      "확인이 필요해요"
+    ]
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

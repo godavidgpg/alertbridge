@@ -1,0 +1,131 @@
+{
+  "id": "S01_expressway_rear_minor",
+  "description": "고속도로 본선 경미 후미 추돌, 에어백 없음, 문 열림",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "SMALL"
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 25.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.6,
+        "lng": 128.5,
+        "accuracyM": 6,
+        "roadType": "EXPRESSWAY_MAIN",
+        "roadTypeConfidence": 0.95,
+        "roadName": "영동고속도로",
+        "direction": "강릉방향",
+        "kmPost": 123.4
+      }
+    },
+    {
+      "tMs": 30000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 12.0
+      }
+    },
+    {
+      "tMs": 33000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 40000,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": true
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 45000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    }
+  ],
+  "expected": {
+    "trigger": "T_EXPRESSWAY_STOP",
+    "severity": "S1",
+    "grades": [
+      "R1",
+      "R3"
+    ],
+    "firstAction": "EVACUATE_GUIDE",
+    "mustContainActions": [
+      "CALL_2504",
+      "CALL_INSURER_CLAIM"
+    ],
+    "impactZonesEmpty": true,
+    "photoCheck": true,
+    "scriptContains": [
+      "영동고속도로 강릉방향 123.4km 지점"
+    ],
+    "hasCaseCard": true
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

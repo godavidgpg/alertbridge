@@ -1,0 +1,26 @@
+{
+  "id": "driver_ev",
+  "name": "박전기",
+  "role": "DRIVER",
+  "experience": "NORMAL",
+  "insurance": {
+    "insurer": "한빛손해보험",
+    "policyNo": "HB-2026-0003",
+    "emergencyPhone": "1588-0001",
+    "claimPhone": "1588-0002",
+    "coverages": [
+      "DAEIN_1",
+      "DAEIN_2",
+      "DAEMUL",
+      "JASIN",
+      "JACHA",
+      "EMERGENCY_TOW"
+    ],
+    "freeTowKm": 40,
+    "evBattery": {
+      "valueKrw": 20000000,
+      "deliveryEpochMs": -63115200000,
+      "usefulLifeYears": 15
+    }
+  }
+}

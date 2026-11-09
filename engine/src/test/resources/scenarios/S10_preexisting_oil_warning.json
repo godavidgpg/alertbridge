@@ -1,0 +1,160 @@
+{
+  "id": "S10_preexisting_oil_warning",
+  "description": "시동 때부터 켜진 엔진오일 경고 + 90초 뒤 경미 접촉. 링 버퍼 밖의 오래된 경고도 사고 근거가 아니다",
+  "profile": "profiles/driver_normal.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "FluidLevel",
+        "kind": "ENGINE_OIL",
+        "state": "LOW"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    },
+    {
+      "tMs": 87500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 89600,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 90000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 90600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 91100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 20.0
+      }
+    },
+    {
+      "tMs": 92100,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 10.0
+      }
+    },
+    {
+      "tMs": 93600,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 95000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 96000,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 97000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_HARD_STOP",
+    "severity": "S1",
+    "grades": [
+      "R3"
+    ],
+    "drivable": "UNKNOWN",
+    "pendingQuestion": "DRIVABLE"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

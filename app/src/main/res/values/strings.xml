@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AlertBridge</string>
+
+    <string name="mode_live">실시간 GPS</string>
+    <string name="live_description">실제 위치 API 입력. 차량 신호가 없어 "알 수 없음"이다. 더미 차량은 S01~S12에서 재생한다.</string>
+    <string name="live_no_permission">위치 권한이 없어 위치도 "미지원"으로 처리한다.</string>
+    <string name="play">재생</string>
+    <string name="pause">일시정지</string>
+    <string name="restart">처음부터</string>
+    <string name="auto_answers">시나리오 응답 자동 입력</string>
+    <string name="manual_report">수동 사고 신고</string>
+    <string name="clock">t = %1$.1f초</string>
+
+    <string name="sec_expected">기대값 비교</string>
+    <string name="sec_input">엔진 입력 (어댑터 변환 후)</string>
+    <string name="sec_pleos">Pleos 콜백 (더미 차량)</string>
+    <string name="use_real_gps">위치는 실제 GPS 사용</string>
+    <string name="sec_detect">1 감지</string>
+    <string name="sec_question">질문</string>
+    <string name="sec_damage">2 파손 추정</string>
+    <string name="sec_risk">3 위험 등급</string>
+    <string name="sec_plan">4 조치 계획</string>
+    <string name="sec_coverage">5 보험 매칭 (참고)</string>
+    <string name="sec_session">6 사건 세션</string>
+    <string name="none">없음</string>
+    <string name="no_incident">사건 없음. 신호를 감시 중이다.</string>
+    <string name="input_ignored">무시 (미지원·알 수 없음)</string>
+
+    <string name="question_IS_ACCIDENT">괜찮으세요? 사고인가요?</string>
+    <string name="question_IS_EXPRESSWAY">지금 고속도로에 계신가요?</string>
+    <string name="question_INJURY">다친 사람이 있나요?</string>
+    <string name="question_FIRE_SMOKE">불이나 연기가 보이나요?</string>
+    <string name="question_DRIVABLE">차를 움직일 수 있나요?</string>
+    <string name="question_OTHER_PARTY_FLED">상대 차량이 현장을 떠났나요?</string>
+    <string name="question_OTHER_PARTY_SUSPICIOUS">상대방이 음주 상태이거나 위협적인가요?</string>
+    <string name="answer_yes">예</string>
+    <string name="answer_no">아니오</string>
+    <string name="answer_unsure">모르겠어요</string>
+    <string name="deadline">무응답 처리까지 %1$d초</string>
+    <string name="no_deadline">사용자가 조작 중이라 시간 제한 없음</string>
+    <string name="stop_first">안전한 곳에 멈춘 뒤 할 수 있어요</string>
+    <string name="tts">TTS: %1$s</string>
+
+    <string name="connect">연결</string>
+    <string name="notify">알리기</string>
+    <string name="done">완료</string>
+    <string name="auto_guardian">사전 동의로 자동 실행 대상 (기관 연결 아님)</string>
+    <string name="no_number">등록된 번호 없음</string>
+    <string name="confirm_primary">신고 연결</string>
+    <string name="confirm_notify">보호자에게 알리기</string>
+    <string name="confirm_later">나중에</string>
+    <string name="dial_opened">전화 화면을 열었어요. 통화가 끝나면 접수번호를 입력해 주세요.</string>
+    <string name="dial_test_mode">테스트 모드: 전화 앱을 열지 않았어요 (%1$s). 실제 연결은 릴리스 빌드에서만 해요.</string>
+    <string name="dial_opened_test">연결 시도로 기록했어요 (테스트 모드라 전화 앱은 열지 않았어요). 접수번호 입력을 시험할 수 있어요.</string>
+    <string name="dial_failed">이 기기에서 전화 화면을 열 수 없어요. 휴대폰으로 %1$s에 전화해 주세요.</string>
+
+    <string name="receipt_hint">접수번호</string>
+    <string name="receipt_save">저장</string>
+    <string name="mark_done">번호 없이 완료 표시</string>
+    <string name="case_not_frozen">사고 확정 전이라 기록을 고정하지 않았다.</string>
+</resources>

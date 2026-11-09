@@ -1,0 +1,127 @@
+{
+  "id": "S07_other_party_fled",
+  "description": "경미 접촉 후 상대 차량 도주, 수동 신고",
+  "profile": "profiles/driver_normal.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 15.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    },
+    {
+      "tMs": 58000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "userActions": [
+    {
+      "type": "ManualReport",
+      "tMs": 60000
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 62000,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 63000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    },
+    {
+      "tMs": 64000,
+      "question": "DRIVABLE",
+      "answer": "YES"
+    },
+    {
+      "tMs": 65000,
+      "question": "OTHER_PARTY_FLED",
+      "answer": "YES"
+    }
+  ],
+  "expected": {
+    "trigger": "T_MANUAL",
+    "severity": "S1",
+    "grades": [
+      "R2"
+    ],
+    "firstAction": "CALL_112",
+    "mustContainActions": [
+      "TAKE_PHOTOS",
+      "CALL_INSURER_CLAIM"
+    ],
+    "scriptContains": [
+      "현장을 떠났습니다"
+    ]
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}

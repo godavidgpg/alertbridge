@@ -1,0 +1,100 @@
+{
+  "id": "S08_all_unsupported_manual",
+  "description": "Safety·Seat 신호 전부 미지원, 수동 신고. 미지원 신호로 온 값은 무시한다",
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": false,
+    "SEAT_OCCUPANCY": false,
+    "SEAT_BELT_BUCKLED": false,
+    "LOW_TIRE_PRESSURE": false,
+    "POWER_DOWN_WARNING": false,
+    "FLUID_LEVEL": false,
+    "TELLTALES": false,
+    "HAZARD_STATE": null,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "BRAKE_PEDAL": true
+  },
+  "profile": "profiles/driver_novice_with_jacha.json",
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5,
+        "lng": 127.0,
+        "accuracyM": 8,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로"
+      }
+    }
+  ],
+  "userActions": [
+    {
+      "type": "ManualReport",
+      "tMs": 10000
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 12000,
+      "question": "INJURY",
+      "answer": "YES"
+    },
+    {
+      "tMs": 13000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_MANUAL",
+    "grades": [
+      "R0"
+    ],
+    "firstAction": "CALL_119",
+    "airbag": "UNKNOWN",
+    "occupantsUnknown": [
+      "ROW1_LEFT"
+    ],
+    "scriptContains": [
+      "에어백 상태는 알 수 없습니다",
+      "탑승자 수는 확인이 필요합니다"
+    ],
+    "scriptNotContains": [
+      "미전개",
+      "전개되지"
+    ]
+  }
+}

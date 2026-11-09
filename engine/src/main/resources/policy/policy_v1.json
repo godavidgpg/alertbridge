@@ -1,0 +1,185 @@
+{
+  "version": "1.0.0",
+  "effectiveDate": "2026-11-07",
+  "thresholds": {
+    "ringBufferMs": 60000,
+    "noResponseTimeoutMs": 30000,
+    "hardStopWindowMs": 3000,
+    "hardStopDropKmh": 30.0,
+    "hardStopToZeroMs": 10000,
+    "stopSpeedKmh": 0.5,
+    "movingSpeedKmh": 5.0,
+    "stopHazardWindowMs": 30000,
+    "preImpactWindowMs": 5000,
+    "steeringMinDeg": 5.0,
+    "steeringRightPositive": true,
+    "deltaVWindowMs": 2000,
+    "deltaVS2Kmh": 25.0,
+    "roadTypeMinConfidence": 0.7,
+    "warningBaselineMs": 5000,
+    "farFromHomeKm": 100.0,
+    "evLowSocPercent": 5.0,
+    "batteryEstimateRangePct": 15,
+    "allow2504WhenSizeUnknown": true,
+    "coordinateMaxAccuracyM": 100.0,
+    "scriptZoneMinConfidence": "HIGH"
+  },
+  "triggers": [
+    { "id": "T_AIRBAG", "confidence": "CONFIRMED" },
+    { "id": "T_MANUAL", "confidence": "CONFIRMED" },
+    { "id": "T_HARD_STOP", "confidence": "HIGH" },
+    { "id": "T_EXPRESSWAY_STOP", "confidence": "MEDIUM" },
+    { "id": "T_STOP_HAZARD", "confidence": "MEDIUM" },
+    { "id": "T_VEHICLE_WARNING", "confidence": "MEDIUM" }
+  ],
+  "expresswayRoadTypes": ["EXPRESSWAY_MAIN", "EXPRESSWAY_SHOULDER", "TUNNEL"],
+  "tow2504RoadTypes": ["EXPRESSWAY_MAIN", "EXPRESSWAY_SHOULDER"],
+  "tow2504SizeClasses": ["SMALL"],
+  "telltaleWarnings": ["AIRBAG", "ABS", "ENGINE", "ENGINE_OIL_PRESSURE", "ENGINE_TEMPERATURE", "EV_SYSTEM", "HEV_SYSTEM", "FCEV_SYSTEM", "EREV_SYSTEM", "MDPS", "TPMS", "LOW_VOLT_BATTERY", "MASTER_WARNING", "RBS", "H2_LEAK"],
+  "triageOrder": ["IS_ACCIDENT", "IS_EXPRESSWAY", "INJURY", "FIRE_SMOKE", "DRIVABLE", "OTHER_PARTY_FLED", "OTHER_PARTY_SUSPICIOUS"],
+  "riskRules": [
+    { "grade": "R0", "when": ["INJURY_YES"], "reason": "INJURY_REPORTED" },
+    { "grade": "R0", "when": ["FIRE_SMOKE_YES"], "reason": "FIRE_SMOKE_REPORTED" },
+    { "grade": "R0", "when": ["CONFIRM_NO_RESPONSE"], "reason": "CONFIRM_NO_RESPONSE" },
+    { "grade": "R0", "when": ["SEVERITY_S3"], "reason": "AIRBAG_DEPLOYED" },
+    { "grade": "R0", "when": ["ACCIDENT", "OCCUPIED_UNBELTED", "SEVERITY_S2_PLUS"], "reason": "OCCUPIED_UNBELTED" },
+    { "grade": "R0", "when": ["ACCIDENT", "EV", "POWER_DOWN_NEW"], "reason": "EV_POWER_DOWN" },
+    { "grade": "R1", "when": ["EXPRESSWAY_STOPPED"], "reason": "EXPRESSWAY_STOPPED" },
+    { "grade": "R1", "when": ["EXPRESSWAY_REPORTED_BY_USER"], "reason": "EXPRESSWAY_REPORTED_BY_USER" },
+    { "grade": "R1", "when": ["NIGHT_OR_RAIN_ON_ROADWAY"], "reason": "NIGHT_OR_RAIN_ON_ROADWAY" },
+    { "grade": "R2", "when": ["OTHER_PARTY_FLED_YES"], "reason": "OTHER_PARTY_FLED" },
+    { "grade": "R2", "when": ["OTHER_PARTY_SUSPICIOUS_YES"], "reason": "OTHER_PARTY_SUSPICIOUS" },
+    { "grade": "R2", "when": ["PEDESTRIAN_OR_BICYCLE"], "reason": "PEDESTRIAN_OR_BICYCLE" },
+    { "grade": "R3", "when": ["ACCIDENT"], "notAny": ["GRADE_R0", "GRADE_R2"], "reason": "ACCIDENT_MINOR" },
+    { "grade": "R4", "when": ["FAULT", "VEHICLE_WARNING_NEW"], "reason": "VEHICLE_WARNING_NEW" }
+  ],
+  "actionOrder": {
+    "R0": [
+      { "id": "CALL_119" },
+      { "id": "BLUELINK_SOS_GUIDE" },
+      { "id": "EVACUATE_GUIDE", "when": ["GRADE_R1"] },
+      { "id": "NOTIFY_GUARDIAN", "when": ["GUARDIAN_REGISTERED"] },
+      { "id": "CALL_INSURER_CLAIM" }
+    ],
+    "R1": [
+      { "id": "EVACUATE_GUIDE" },
+      { "id": "CALL_2504" },
+      { "id": "CALL_112" },
+      { "id": "CALL_INSURER_EMERGENCY" }
+    ],
+    "R2": [
+      { "id": "CALL_112" },
+      { "id": "TAKE_PHOTOS" },
+      { "id": "CALL_INSURER_CLAIM" },
+      { "id": "TOW_GUARD" }
+    ],
+    "R3": [
+      { "id": "MOVE_TO_SAFETY" },
+      { "id": "CALL_INSURER_CLAIM" },
+      { "id": "EXCHANGE_INFO_QR" },
+      { "id": "TAKE_PHOTOS" },
+      { "id": "TOW_GUARD", "when": ["TOW_NEEDED"] }
+    ],
+    "R4": [
+      { "id": "EXPLAIN_WARNING" },
+      { "id": "CALL_2504", "when": ["EXPRESSWAY"] },
+      { "id": "CALL_INSURER_EMERGENCY", "notAny": ["EXPRESSWAY"] },
+      { "id": "SERVICE_BOOKING" }
+    ]
+  },
+  "actionDefs": {
+    "CALL_119": {
+      "kind": "CONTACT", "contact": "119", "channel": "DIAL", "script": "119",
+      "reasons": [
+        { "when": ["FIRE_SMOKE_YES"], "key": "reason.call119.fire" },
+        { "when": ["INJURY_YES"], "key": "reason.call119.injury" },
+        { "when": ["CONFIRM_NO_RESPONSE"], "key": "reason.call119.noResponse" },
+        { "when": ["SEVERITY_S3"], "key": "reason.call119.airbag" },
+        { "when": ["EV", "POWER_DOWN_NEW"], "key": "reason.call119.ev" },
+        { "key": "reason.call119.default" }
+      ]
+    },
+    "CALL_112": {
+      "kind": "CONTACT", "contact": "112", "channel": "DIAL", "script": "112",
+      "reasons": [
+        { "when": ["OTHER_PARTY_FLED_YES"], "key": "reason.call112.fled" },
+        { "when": ["OTHER_PARTY_SUSPICIOUS_YES"], "key": "reason.call112.suspicious" },
+        { "when": ["PEDESTRIAN_OR_BICYCLE"], "key": "reason.call112.pedestrian" },
+        { "key": "reason.call112.expressway" }
+      ]
+    },
+    "CALL_2504": {
+      "kind": "CONTACT", "contact": "2504", "channel": "DIAL", "script": "2504", "requires": ["ELIGIBLE_2504"],
+      "reasons": [ { "key": "reason.call2504" } ]
+    },
+    "CALL_INSURER_EMERGENCY": {
+      "kind": "CONTACT", "contact": "INSURER_EMERGENCY", "channel": "DIAL", "script": "INSURER_EMERGENCY",
+      "reasons": [ { "key": "reason.insurerEmergency" } ]
+    },
+    "CALL_INSURER_CLAIM": {
+      "kind": "CONTACT", "contact": "INSURER_CLAIM", "channel": "DIAL", "script": "INSURER_CLAIM",
+      "reasons": [ { "key": "reason.insurerClaim" } ]
+    },
+    "NOTIFY_GUARDIAN": {
+      "kind": "NOTIFY", "contact": "GUARDIAN", "channel": "SMS_GUIDE",
+      "reasons": [
+        { "when": ["GUARDIAN_AUTO"], "key": "reason.guardian.auto" },
+        { "key": "reason.guardian.default" }
+      ]
+    },
+    "BLUELINK_SOS_GUIDE": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.bluelink" } ],
+      "checklist": ["checklist.bluelink.1", "checklist.bluelink.2"]
+    },
+    "EVACUATE_GUIDE": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.evacuate" } ],
+      "checklist": ["checklist.evacuate.1", "checklist.evacuate.2", "checklist.evacuate.3", "checklist.evacuate.4"]
+    },
+    "MOVE_TO_SAFETY": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.moveToSafety" } ]
+    },
+    "EXCHANGE_INFO_QR": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.exchangeInfo" } ]
+    },
+    "TAKE_PHOTOS": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.takePhotos" } ]
+    },
+    "TOW_GUARD": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [
+        { "when": ["TOW_OVER_FREE_KM"], "key": "reason.towGuard.over" },
+        { "key": "reason.towGuard.default" }
+      ],
+      "checklist": ["checklist.tow.1", "checklist.tow.2", "checklist.tow.3"]
+    },
+    "SERVICE_BOOKING": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.serviceBooking" } ]
+    },
+    "EXPLAIN_WARNING": {
+      "kind": "GUIDE", "channel": "SCREEN_GUIDE",
+      "reasons": [ { "key": "reason.explainWarning" } ]
+    }
+  },
+  "coverageRules": [
+    { "when": ["HAS_OTHER_VEHICLE"], "claim": ["DAEMUL", "DAEIN_1", "DAEIN_2"], "reasonKey": "coverage.reason.otherVehicle" },
+    { "when": ["MY_CAR_DAMAGED"], "claim": ["JACHA"], "reasonKey": "coverage.reason.myCar", "gapIfMissing": "JACHA", "gapKey": "coverage.gap.jacha" },
+    { "when": ["INJURY_YES"], "claim": ["JASIN", "JASANG"], "reasonKey": "coverage.reason.occupant" },
+    { "when": ["GRADE_R0"], "claim": ["JASIN", "JASANG"], "reasonKey": "coverage.reason.occupant" },
+    { "when": ["DRIVABLE_NO"], "claim": ["EMERGENCY_TOW"], "reasonKey": "coverage.reason.tow" },
+    { "when": ["EV", "EV_BATTERY_AT_RISK"], "claim": ["JACHA", "EV_BATTERY_NEW_VALUE"], "reasonKey": "coverage.reason.evBattery", "gapIfMissing": "EV_BATTERY_NEW_VALUE", "gapKey": "coverage.gap.evBattery", "estimate": "BATTERY_DEPRECIATION" },
+    { "when": ["EV", "EV_TOW_OR_LOW_SOC"], "claim": ["EV_TOW_SOS"], "reasonKey": "coverage.reason.evTow", "gapIfMissing": "EV_TOW_SOS", "gapKey": "coverage.gap.evTow" },
+    { "when": ["FAR_FROM_HOME"], "claim": ["REMOTE_RETURN", "TRANSPORT_COST"], "reasonKey": "coverage.reason.farFromHome" }
+  ],
+  "contacts": { "119": "119", "112": "112", "2504": "1588-2504" },
+  "towFareTable": {
+    "source": "TODO: 국토교통부 구난형 특수자동차 운임·요금표 최신 고시로 팀이 채운다",
+    "asOf": "",
+    "rows": []
+  }
+}

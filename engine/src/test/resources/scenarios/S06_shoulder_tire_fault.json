@@ -1,0 +1,130 @@
+{
+  "id": "S06_shoulder_tire_fault",
+  "description": "고속도로 갓길, 앞 왼쪽 타이어 저압 신규. 사고 아님",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "SMALL"
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 80.0
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.3,
+        "lng": 127.1,
+        "accuracyM": 6,
+        "roadType": "EXPRESSWAY_SHOULDER",
+        "roadTypeConfidence": 0.9,
+        "roadName": "경부고속도로",
+        "direction": "부산방향",
+        "kmPost": 31.0
+      }
+    },
+    {
+      "tMs": 30000,
+      "signal": {
+        "type": "LowTirePressure",
+        "wheel": "LEFT_FRONT",
+        "low": true
+      }
+    },
+    {
+      "tMs": 40000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 60.0
+      }
+    },
+    {
+      "tMs": 50000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 60000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "expected": {
+    "trigger": "T_VEHICLE_WARNING",
+    "severity": "S0",
+    "grades": [
+      "R1",
+      "R4"
+    ],
+    "drivable": "NO",
+    "firstAction": "EVACUATE_GUIDE",
+    "mustContainActions": [
+      "CALL_2504",
+      "EXPLAIN_WARNING",
+      "SERVICE_BOOKING"
+    ],
+    "impactZonesEmpty": true,
+    "photoCheck": false,
+    "hasCaseCard": false
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "LOW_TIRE_PRESSURE": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "FLUID_LEVEL": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "EV_SOC": true,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "LOCATION": true,
+    "HAZARD_STATE": null
+  }
+}
