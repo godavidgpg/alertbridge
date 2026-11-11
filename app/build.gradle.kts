@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -7,6 +9,8 @@ plugins {
 android {
     namespace = "com.alertbridge.app"
     compileSdk = 36
+    // 차속(PERF_VEHICLE_SPEED). 차량용 Android에만 있어 매니페스트에서 required=false로 선언한다.
+    useLibrary("android.car")
 
     defaultConfig {
         applicationId = "com.alertbridge.app"
@@ -27,6 +31,14 @@ android {
         release { buildConfigField("boolean", "OPEN_REAL_DIALER", "true") }
     }
 
+    // Claude API 키. local.properties(git 제외)의 anthropic.apiKey 또는 환경 변수 ANTHROPIC_API_KEY.
+    // 키를 앱에 넣는 것은 시연용이다. 배포할 때는 서버 프록시를 거친다.
+    val localProps = Properties().apply {
+        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    }
+    val anthropicKey = localProps.getProperty("anthropic.apiKey") ?: System.getenv("ANTHROPIC_API_KEY") ?: ""
+    defaultConfig { buildConfigField("String", "ANTHROPIC_API_KEY", "\"$anthropicKey\"") }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -42,12 +54,14 @@ android {
     testOptions { unitTests.isReturnDefaultValues = true }
 
     packaging {
-        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        resources.excludes += listOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/DEPENDENCIES", "/META-INF/LICENSE*", "/META-INF/NOTICE*", "/META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
 }
 
 dependencies {
     implementation(project(":engine"))
+    implementation(project(":agent"))
+    implementation("androidx.compose.material:material-icons-core")
     implementation("ai.pleos.playground:Vehicle:2.3.2")
 
     implementation(platform("androidx.compose:compose-bom:2025.06.01"))
@@ -58,6 +72,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("com.google.zxing:core:3.5.3") // 인적사항 교환 QR
 
     testImplementation(kotlin("test-junit"))
 }

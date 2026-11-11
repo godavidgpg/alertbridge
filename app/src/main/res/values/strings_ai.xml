@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 앱 상단 -->
+    <string name="top_source">입력</string>
+    <string name="demo_sheet_title">무엇으로 시험할까요?</string>
+    <string name="demo_sheet_live">실시간 (실제 GPS + 연결된 차량)</string>
+    <string name="demo_sheet_body">시나리오는 더미 차량이 Pleos SDK 형식으로 신호를 보내요.</string>
+
+    <!-- 대기 화면 -->
+    <string name="idle_location">위치</string>
+    <string name="idle_location_wait">확인하는 중</string>
+    <string name="idle_vehicle">차량 신호</string>
+    <string name="idle_vehicle_live">%1$s 연결</string>
+    <string name="idle_vehicle_none">연결된 차량 없음</string>
+    <string name="idle_vehicle_demo">데모 차량</string>
+    <string name="idle_insurance">보험</string>
+    <string name="idle_insurance_none">등록 안 됨</string>
+    <string name="idle_ai">AI 판단</string>
+    <string name="idle_ai_on">Claude 사용</string>
+    <string name="idle_ai_off">규칙 기반 (API 키 없음)</string>
+    <string name="idle_hint">연결은 언제나 직접 눌러야 시작돼요.</string>
+
+    <!-- AI 보험 판단 -->
+    <string name="ai_title">AI 보험 판단</string>
+    <string name="ai_source_ai">Claude</string>
+    <string name="ai_source_rules">규칙 판단</string>
+    <string name="ai_running">판단하는 중이에요</string>
+    <string name="ai_running_step">%1$s 중이에요</string>
+    <string name="ai_tow_YES">견인을 부르는 게 좋아요</string>
+    <string name="ai_tow_NO">견인은 필요 없어요</string>
+    <string name="ai_tow_UNSURE">견인이 필요한지 확인이 필요해요</string>
+    <string name="ai_coverage">보장</string>
+    <string name="ai_verdict_COVERED">보장</string>
+    <string name="ai_verdict_NOT_COVERED">보장 안 됨</string>
+    <string name="ai_verdict_CHECK_NEEDED">확인 필요</string>
+    <string name="ai_out_of_pocket">예상 본인 부담 %1$s</string>
+    <string name="ai_actions_taken">처리한 일</string>
+    <string name="ai_next_steps">이어서 할 일</string>
+    <string name="ai_rerun">다시 판단</string>
+    <string name="ai_start">AI 보험 판단 받기</string>
+    <string name="ai_unavailable">등록된 보험 정보가 없어 판단할 수 없어요.</string>
+    <string name="ai_idle_body">질문에 답하시면 보험으로 무엇을 할지 판단해 드려요.</string>
+
+    <!-- 승인 -->
+    <string name="approve_title">%1$s, 진행할까요?</string>
+    <string name="approve_why">AI가 이렇게 판단했어요</string>
+    <string name="approve_detail">보험사에 전달할 내용</string>
+    <string name="approve_note">승인하면 보험사(시연용)에 바로 접수돼요. 112·119 연결은 여기서 하지 않아요.</string>
+    <string name="approve_yes">진행하기</string>
+    <string name="approve_no">하지 않기</string>
+
+    <!-- 계획 화면 -->
+    <string name="plan_first">가장 먼저</string>
+    <string name="plan_rest">이어서 할 일</string>
+    <string name="plan_vehicle">차량 상태</string>
+    <string name="plan_question">하나만 더 여쭤볼게요</string>
+</resources>

@@ -4,6 +4,8 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 
 /** 음성 안내. Pleos TTS SDK를 나중에 주입한다. */
 interface Tts {
@@ -46,6 +48,29 @@ class TestModeDialer(private val onDial: (String) -> Unit) : Dialer {
         onDial(number)
         return true
     }
+}
+
+/**
+ * Android 기본 TTS. Pleos TTS SDK가 들어오면 같은 인터페이스로 바꾼다.
+ * 한국어 음성이 없거나 초기화 전이면 소리 없이 [onSpeak]로만 알린다.
+ */
+class AndroidTts(context: Context, private val onSpeak: (String) -> Unit) : Tts {
+    private var ready = false
+    private val engine: TextToSpeech = TextToSpeech(context.applicationContext) { status ->
+        ready = status == TextToSpeech.SUCCESS && setKorean()
+    }
+
+    private fun setKorean(): Boolean {
+        val r = engine.setLanguage(Locale.KOREAN)
+        return r != TextToSpeech.LANG_MISSING_DATA && r != TextToSpeech.LANG_NOT_SUPPORTED
+    }
+
+    override fun speak(text: String) {
+        onSpeak(text)
+        if (ready) engine.speak(text, TextToSpeech.QUEUE_ADD, null, text.hashCode().toString())
+    }
+
+    fun shutdown() = engine.shutdown()
 }
 
 /** 실제 음성을 내지 않고 읽을 문장만 남긴다. 디버그 화면에 보여 준다. */

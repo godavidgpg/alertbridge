@@ -6,20 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,7 +32,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alertbridge.app.R
 import com.alertbridge.engine.fixture.Expected
 import com.alertbridge.engine.model.Action
@@ -54,7 +49,7 @@ import com.alertbridge.engine.model.UserActionEvent
 private val Pass = Color(0xFF1B7F4B)
 private val Fail = Color(0xFFC62828)
 
-private fun gradeColor(g: RiskGrade) = when (g) {
+fun gradeColor(g: RiskGrade) = when (g) {
     RiskGrade.R0 -> Color(0xFFC62828)
     RiskGrade.R1 -> Color(0xFFD9730D)
     RiskGrade.R2 -> Color(0xFF5E4DB2)
@@ -64,39 +59,34 @@ private fun gradeColor(g: RiskGrade) = when (g) {
 
 /** 판단 파이프라인을 위에서 아래로 그대로 보여 준다. 판단은 엔진이 하고 여기서는 표시만 한다. */
 @Composable
-fun LogicScreen(vm: AppViewModel, onLive: () -> Unit) {
-    val s by vm.state.collectAsStateWithLifecycle()
+fun LogicScreen(vm: AppViewModel, s: UiState, modifier: Modifier = Modifier) {
     val r = s.result
-    Surface(Modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxSize().systemBarsPadding()) {
-            Controls(s, vm, onLive)
-            HorizontalDivider()
-            Column(
-                Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                s.scenario?.let { Section(stringResource(R.string.sec_expected)) { ExpectedRows(it.expected, r) } }
-                if (r == null) {
-                    Body(stringResource(R.string.no_incident))
-                } else {
-                    Section(stringResource(R.string.sec_detect)) { Detect(r) }
-                    Section(stringResource(R.string.sec_question)) { Question(r, s, vm) }
-                    Section(stringResource(R.string.sec_damage)) { Damage(r, vm) }
-                    Section(stringResource(R.string.sec_risk)) { Risk(r, vm) }
-                    Section(stringResource(R.string.sec_plan)) { Plan(r, s, vm) }
-                    r.coverage?.let { Section(stringResource(R.string.sec_coverage)) { Coverage(r) } }
-                    Section(stringResource(R.string.sec_session)) { Session(r, vm) }
-                }
-                Section(stringResource(R.string.sec_input)) { Inputs(s) }
-                if (s.scenario != null) Section(stringResource(R.string.sec_pleos)) { PleosCalls(s) }
-            }
+    Column(
+        modifier.verticalScroll(rememberScrollState()).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        s.scenario?.let { Section(stringResource(R.string.sec_expected)) { ExpectedRows(it.expected, r) } }
+        if (r == null) {
+            Body(stringResource(R.string.no_incident))
+        } else {
+            Section(stringResource(R.string.sec_detect)) { Detect(r) }
+            Section(stringResource(R.string.sec_question)) { Question(r, s, vm) }
+            Section(stringResource(R.string.sec_damage)) { Damage(r, vm) }
+            Section(stringResource(R.string.sec_risk)) { Risk(r, vm) }
+            Section(stringResource(R.string.sec_plan)) { Plan(r, s, vm) }
+            r.coverage?.let { Section(stringResource(R.string.sec_coverage)) { Coverage(r) } }
+            Section(stringResource(R.string.sec_session)) { Session(r, vm) }
+            Section("7 AI 보험 판단") { AiRaw(s) }
         }
+        Section(stringResource(R.string.sec_input)) { Inputs(s) }
+        if (s.scenario != null) Section(stringResource(R.string.sec_pleos)) { PleosCalls(s) }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Controls(s: UiState, vm: AppViewModel, onLive: () -> Unit) {
+/** 입력 선택(실시간/시나리오)과 재생 조작. [compact]면 운전자 화면용으로 줄여 보여 준다. */
+fun ScenarioControls(s: UiState, vm: AppViewModel, onLive: () -> Unit, compact: Boolean = false) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             FilterChip(s.scenario == null, onLive, { Text(stringResource(R.string.mode_live)) })
@@ -104,9 +94,11 @@ private fun Controls(s: UiState, vm: AppViewModel, onLive: () -> Unit) {
                 FilterChip(s.scenario?.id == sc.id, { vm.start(sc) }, { Text(sc.id.take(3)) })
             }
         }
+        if (compact) return@Column
         Body(
             s.scenario?.description ?: stringResource(if (s.locationDenied) R.string.live_no_permission else R.string.live_description),
         )
+        if (s.scenario == null && s.liveInputs.isNotEmpty()) Mono(stringResource(R.string.live_inputs, s.liveInputs.joinToString(", ")))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.Center) {
             if (s.scenario != null) {
                 TextButton(vm::togglePlay) { Text(stringResource(if (s.playing) R.string.pause else R.string.play)) }
@@ -368,4 +360,22 @@ private fun Session(r: EngineResult, vm: AppViewModel) {
     if (r.session.state != SessionState.CLOSED && r.session.state != SessionState.DISMISSED) {
         TextButton({ vm.userAction { UserActionEvent.CloseSession(it) } }) { Text("CloseSession") }
     }
+}
+
+/** AI 판단 원본. 판단 출처(AI/규칙)와 실패 이유까지 그대로 보여 준다. */
+@Composable
+private fun AiRaw(s: UiState) {
+    when (val a = s.advisor) {
+        is AdvisorUi.Done -> {
+            val d = a.decision
+            Kv("source", d.source.name)
+            Kv("callTow", d.callTow.name)
+            Kv("towReason", d.towReason)
+            d.coverage.forEach { Mono("coverage ${it.item}: ${it.verdict} ${it.outOfPocketKrw ?: ""} - ${it.note}") }
+            d.actionsTaken.forEach { Mono("taken ${it.tool} #${it.referenceNo}") }
+            d.fallbackReason?.let { Kv("fallback", it) }
+        }
+        else -> Kv("state", a.toString())
+    }
+    s.pendingApproval?.let { Kv("pendingApproval", it.tool) }
 }

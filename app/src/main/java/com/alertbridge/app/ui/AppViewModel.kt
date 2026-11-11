@@ -6,13 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.alertbridge.app.R
 import com.alertbridge.app.adapter.DummyPleosSource
 import com.alertbridge.app.adapter.FixtureSignalSource
+import com.alertbridge.app.adapter.CarSpeedSource
+import com.alertbridge.app.adapter.CompositeSignalSource
 import com.alertbridge.app.adapter.LiveSignalSource
+import com.alertbridge.app.adapter.PleosLiveSource
 import com.alertbridge.app.adapter.SignalSource
 import com.alertbridge.app.platform.AndroidDialer
 import com.alertbridge.app.platform.Dialer
 import com.alertbridge.app.platform.FakeGuardianNotifier
 import com.alertbridge.app.platform.GuardianNotifier
-import com.alertbridge.app.platform.RecordingTts
+import com.alertbridge.app.platform.AndroidTts
 import com.alertbridge.app.platform.TestModeDialer
 import com.alertbridge.app.BuildConfig
 import com.alertbridge.app.platform.Tts
@@ -22,6 +25,8 @@ import com.alertbridge.engine.fixture.ScenarioJson
 import com.alertbridge.engine.model.Action
 import com.alertbridge.engine.model.ActionId
 import com.alertbridge.engine.model.ActionStatus
+import com.alertbridge.engine.model.Experience
+import com.alertbridge.engine.model.OccupantProfile
 import com.alertbridge.engine.model.Answer
 import com.alertbridge.engine.model.CapabilityMap
 import com.alertbridge.engine.model.EngineResult
@@ -31,7 +36,20 @@ import com.alertbridge.engine.model.UserActionEvent
 import com.alertbridge.engine.model.VehicleEvent
 import com.alertbridge.engine.model.requiredCapability
 import com.alertbridge.engine.policy.Messages
+import com.alertbridge.agent.advisor.ActionRequest
+import com.alertbridge.agent.advisor.AdvisorDecision
+import com.alertbridge.agent.advisor.AdvisorProgress
+import com.alertbridge.agent.advisor.ClaudeAgentModel
+import com.alertbridge.agent.advisor.InsuranceAdvisor
+import com.alertbridge.agent.advisor.Tools
+import com.alertbridge.agent.insurance.MockInsurerApi
+import com.alertbridge.engine.model.IncidentKind
+import com.alertbridge.engine.model.SessionState
+import com.alertbridge.engine.model.VehicleProfile
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +58,14 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class InputRow(val event: VehicleEvent, val used: Boolean)
+
+sealed interface AdvisorUi {
+    data object Idle : AdvisorUi
+    /** 보험 정보가 없어 판단할 수 없다 */
+    data object Unavailable : AdvisorUi
+    data class Running(val step: String?) : AdvisorUi
+    data class Done(val decision: AdvisorDecision) : AdvisorUi
+}
 
 data class UiState(
     /** null이면 실시간 GPS 모드 */
@@ -60,6 +86,14 @@ data class UiState(
     val locationDenied: Boolean = false,
     /** 디버그 빌드에서 전화 앱 대신 기록만 한 번호 */
     val testModeDialed: String? = null,
+    /** 실시간 모드에서 연결된 입력 (GPS, 차속, Pleos 차량) */
+    val liveInputs: List<String> = emptyList(),
+    /** 시나리오의 운전자 프로필. 실시간 모드는 프로필 선택 화면이 없어 null */
+    val driver: OccupantProfile? = null,
+    /** AI 보험 판단 */
+    val advisor: AdvisorUi = AdvisorUi.Idle,
+    /** AI가 실행하려는 조치. 사용자 승인을 기다린다 */
+    val pendingApproval: ActionRequest? = null,
 )
 
 /**
@@ -74,7 +108,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val scenarios: List<Scenario> = app.assets.list("scenarios").orEmpty().sorted()
         .map { ScenarioJson.scenario(readAsset("scenarios/$it")) }
 
-    private val tts: Tts = RecordingTts { text -> _state.update { it.copy(lastSpoken = text) } }
+    private val tts = AndroidTts(app) { text -> _state.update { it.copy(lastSpoken = text) } }
     private val dialer: Dialer =
         if (BuildConfig.OPEN_REAL_DIALER) AndroidDialer(app)
         else TestModeDialer { number -> _state.update { it.copy(testModeDialed = number) } }
@@ -85,6 +119,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var playback: FixtureSignalSource? = null
     private var job: Job? = null
     private var lastQuestion: TriageQ? = null
+    private var driver: OccupantProfile? = null
+    private var vehicle: VehicleProfile? = null
+
+    /** 키가 없으면 AI 대신 규칙 기반 판단을 쓴다. */
+    val aiAvailable: Boolean = BuildConfig.ANTHROPIC_API_KEY.isNotBlank()
+    private var advisorJob: Job? = null
+    private var approval: CompletableDeferred<Boolean>? = null
+    private var advisedSession: Long? = null
 
     private fun readAsset(path: String) = getApplication<Application>().assets.open(path).use { it.readBytes().toString(Charsets.UTF_8) }
 
@@ -94,10 +136,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 실제 위치 API로 시작한다. 차량 신호 없이도 수동 신고는 동작한다. */
     fun startLive() {
-        val src = LiveSignalSource(getApplication())
+        val app = getApplication<Application>()
+        val gps = LiveSignalSource(app)
+        val speed = CarSpeedSource(app)
+        val pleos = PleosLiveSource.tryCreate(app)
+        val inputs = listOfNotNull(
+            app.getString(R.string.input_gps),
+            app.getString(R.string.input_speed).takeIf { speed.isAutomotive },
+            app.getString(R.string.input_pleos).takeIf { pleos != null },
+        )
         playback = null
-        run(src, null) { _ -> }
-        _state.update { it.copy(locationDenied = !src.hasPermission()) }
+        run(CompositeSignalSource(listOfNotNull(gps, speed, pleos)), null) { _ -> }
+        _state.update { it.copy(locationDenied = !gps.hasPermission(), liveInputs = inputs) }
+    }
+
+    override fun onCleared() {
+        job?.cancel()
+        tts.shutdown()
     }
 
     fun start(s: Scenario) {
@@ -121,11 +176,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun run(src: SignalSource, s: Scenario?, beforeTick: (AlertBridgeEngine) -> Unit) {
         job?.cancel()
         lastQuestion = null
-        val driver = s?.profile?.let { ScenarioJson.profile(readAsset(it)) }
+        // 실시간 모드에는 프로필 선택 화면이 없어 데모 운전자를 쓴다.
+        val driver = ScenarioJson.profile(readAsset(s?.profile ?: DEMO_PROFILE))
+        this.driver = driver
+        this.vehicle = s?.vehicle
+        advisorJob?.cancel()
+        approval?.complete(false)
+        advisedSession = null
         val eng = AlertBridgeEngine.withDefaultPolicy()
         engine = eng
         source = src
-        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps) }
+        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps, driver = driver) }
         job = viewModelScope.launch {
             val caps = src.capabilities()
             eng.configure(caps, driver, s?.vehicle)
@@ -195,6 +256,72 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (opened) userAction { UserActionEvent.ContactAttempted(action.id, it) }
     }
 
+    /**
+     * AI 보험 판단. 보험 조회·보장 판단은 바로 하고, 견인 요청·사고 접수는 사용자 승인 후에만 실행한다.
+     * 실행된 조치의 접수번호는 엔진에 접수번호로 넘겨 사건 기록에 남긴다.
+     */
+    fun runAdvisor() {
+        val eng = engine ?: return
+        val r = eng.currentResult(now()) ?: return
+        val insurance = driver?.insurance ?: run {
+            _state.update { it.copy(advisor = AdvisorUi.Unavailable) }
+            return
+        }
+        advisorJob?.cancel()
+        advisedSession = r.candidate.detectedMs
+        _state.update { it.copy(advisor = AdvisorUi.Running(null)) }
+        val v = vehicle
+        advisorJob = viewModelScope.launch {
+            val decision = withContext(Dispatchers.IO) {
+                InsuranceAdvisor(ClaudeAgentModel.fromApiKey(BuildConfig.ANTHROPIC_API_KEY)).decide(
+                    result = r,
+                    vehicle = v,
+                    insurer = MockInsurerApi(insurance),
+                    approve = { req -> awaitApproval(req) },
+                    onProgress = { p ->
+                        val label = (p as? AdvisorProgress.Calling)?.label
+                        _state.update { it.copy(advisor = AdvisorUi.Running(label)) }
+                    },
+                )
+            }
+            recordActions(decision)
+            _state.update { it.copy(advisor = AdvisorUi.Done(decision), pendingApproval = null) }
+        }
+    }
+
+    private suspend fun awaitApproval(req: ActionRequest): Boolean {
+        val d = CompletableDeferred<Boolean>()
+        approval = d
+        _state.update { it.copy(pendingApproval = req) }
+        val ok = d.await()
+        _state.update { it.copy(pendingApproval = null) }
+        return ok
+    }
+
+    fun answerApproval(ok: Boolean) {
+        approval?.complete(ok)
+        approval = null
+    }
+
+    /** 보험사가 준 번호는 사람이 승인한 조치의 접수번호다. 엔진 기록에 남긴다. */
+    private fun recordActions(d: AdvisorDecision) {
+        val eng = engine ?: return
+        d.actionsTaken.forEach { a ->
+            val id = when (a.tool) {
+                Tools.REQUEST_TOW.name -> ActionId.CALL_INSURER_EMERGENCY
+                Tools.FILE_CLAIM.name -> ActionId.CALL_INSURER_CLAIM
+                else -> return@forEach
+            }
+            if (a.referenceNo.isBlank()) return@forEach
+            eng.onUserAction(UserActionEvent.ContactAttempted(id, now()))
+            eng.onUserAction(UserActionEvent.ReceiptNumberEntered(id, a.referenceNo, now()))
+        }
+        refresh()
+    }
+
+    /** 신고 문장 읽어 주기 */
+    fun speak(text: String) = tts.speak(text)
+
     fun notifyGuardian(action: Action) {
         val phone = action.contact?.number ?: return
         guardian.notify(phone, action.reason.text)
@@ -214,8 +341,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         val q = result?.pendingQuestion
-        if (q != null && q != lastQuestion) tts.speak(getApplication<Application>().getString(questionRes(q)))
+        if (q != null && q != lastQuestion) {
+            val text = getApplication<Application>().getString(questionRes(q))
+            tts.speak(text)
+            // 초보·고령 모드는 같은 안내를 한 번 더 읽는다.
+            val slow = driver?.experience.let { it == Experience.NOVICE || it == Experience.SENIOR }
+            if (slow) tts.speak(text)
+        }
         lastQuestion = q
+
+        // 질문이 끝나면 AI 보험 판단을 한 번 자동으로 돌린다.
+        val r = result
+        val active = r != null && r.session.state != SessionState.DISMISSED && r.session.state != SessionState.CLOSED
+        if (active && r!!.pendingQuestion == null && r.candidate.kind != IncidentKind.ACCIDENT_SUSPECTED &&
+            advisedSession != r.candidate.detectedMs && _state.value.advisor !is AdvisorUi.Running
+        ) runAdvisor()
+        if (!active && _state.value.advisor != AdvisorUi.Idle) {
+            advisorJob?.cancel()
+            approval?.complete(false)
+            advisedSession = null
+            _state.update { it.copy(advisor = AdvisorUi.Idle, pendingApproval = null) }
+        }
         _state.update { it.copy(nowMs = now, result = result) }
     }
 
@@ -223,6 +369,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private companion object {
         const val TICK_MS = 100L
+        const val DEMO_PROFILE = "profiles/driver_normal.json"
         const val MAX_INPUT_ROWS = 40
     }
 }

@@ -11,13 +11,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Pleos SDK. :app은 아직 의존하지 않는다. PleosSignalSource 구현 시 사용.
+        // Pleos SDK (Vehicle, FusedLocation, NaviHelper)
         maven("https://nexus-playground.pleos.ai/repository/maven-releases/")
     }
 }
 
 rootProject.name = "alertbridge"
 include(":engine")
+include(":agent")
 
 // :engine만 돌릴 때 Android SDK가 필요 없도록, SDK가 있을 때만 :app을 포함한다.
 val localProps = file("local.properties")
