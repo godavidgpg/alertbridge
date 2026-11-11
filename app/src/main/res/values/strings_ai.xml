@@ -21,7 +21,7 @@
     <string name="idle_hint">연결은 언제나 직접 눌러야 시작돼요.</string>
 
     <!-- AI 보험 판단 -->
-    <string name="ai_title">AI 보험 판단</string>
+    <string name="ai_title">보험 판단</string>
     <string name="ai_source_ai">Claude</string>
     <string name="ai_source_rules">규칙 판단</string>
     <string name="ai_running">판단하는 중이에요</string>
@@ -35,9 +35,9 @@
     <string name="ai_verdict_CHECK_NEEDED">확인 필요</string>
     <string name="ai_out_of_pocket">예상 본인 부담 %1$s</string>
     <string name="ai_actions_taken">처리한 일</string>
-    <string name="ai_next_steps">이어서 할 일</string>
+    <string name="ai_next_steps">보험 처리 순서</string>
     <string name="ai_rerun">다시 판단</string>
-    <string name="ai_start">AI 보험 판단 받기</string>
+    <string name="ai_start">보험 판단 받기</string>
     <string name="ai_unavailable">등록된 보험 정보가 없어 판단할 수 없어요.</string>
     <string name="ai_idle_body">질문에 답하시면 보험으로 무엇을 할지 판단해 드려요.</string>
 

@@ -31,7 +31,7 @@
     <string name="no_incident">사건 없음. 신호를 감시 중이다.</string>
     <string name="input_ignored">무시 (미지원·알 수 없음)</string>
 
-    <string name="question_IS_ACCIDENT">괜찮으세요? 사고인가요?</string>
+    <string name="question_IS_ACCIDENT">사고가 났나요?</string>
     <string name="question_IS_EXPRESSWAY">지금 고속도로에 계신가요?</string>
     <string name="question_INJURY">다친 사람이 있나요?</string>
     <string name="question_FIRE_SMOKE">불이나 연기가 보이나요?</string>

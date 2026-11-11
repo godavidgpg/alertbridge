@@ -373,6 +373,7 @@ private fun AiRaw(s: UiState) {
             Kv("towReason", d.towReason)
             d.coverage.forEach { Mono("coverage ${it.item}: ${it.verdict} ${it.outOfPocketKrw ?: ""} - ${it.note}") }
             d.actionsTaken.forEach { Mono("taken ${it.tool} #${it.referenceNo}") }
+            d.nextSteps.forEachIndexed { i, step -> Mono("step ${i + 1}: $step") }
             d.fallbackReason?.let { Kv("fallback", it) }
         }
         else -> Kv("state", a.toString())

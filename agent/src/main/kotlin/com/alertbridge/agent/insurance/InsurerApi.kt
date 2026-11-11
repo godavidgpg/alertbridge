@@ -103,9 +103,9 @@ class MockInsurerApi(
         Coverage.DAEMUL -> CoverageTerm(c, "대물배상", limitKrw = 1_000_000_000)
         Coverage.JASIN -> CoverageTerm(c, "자기신체사고", limitKrw = 50_000_000)
         Coverage.JASANG -> CoverageTerm(c, "자동차상해", limitKrw = 100_000_000)
-        Coverage.JACHA -> CoverageTerm(c, "자기차량손해", deductible = "손해액의 20%, 최소 20만 원 최대 50만 원 (예시)")
+        Coverage.JACHA -> CoverageTerm(c, "자기차량손해", deductible = "자기부담금은 손해액의 20%, 최소 20만 원 최대 50만 원")
         Coverage.MUBOHEOM -> CoverageTerm(c, "무보험차상해", limitKrw = 200_000_000)
-        Coverage.EMERGENCY_TOW -> CoverageTerm(c, "긴급출동 견인", deductible = "무료 거리 초과 시 km당 요금 (예시 2,500원)")
+        Coverage.EMERGENCY_TOW -> CoverageTerm(c, "긴급출동 견인", deductible = "무료 거리를 넘으면 km당 2,500원")
         Coverage.EV_BATTERY_NEW_VALUE -> CoverageTerm(c, "배터리 신가 보상")
         Coverage.EV_TOW_SOS -> CoverageTerm(c, "전기차 긴급출동")
         Coverage.REMOTE_RETURN -> CoverageTerm(c, "원격지 귀가")
@@ -143,7 +143,7 @@ class MockInsurerApi(
             IncidentType.SINGLE_VEHICLE, IncidentType.BREAKDOWN, IncidentType.EV_BATTERY_DAMAGE -> Unit
         }
         if (req.ownCarDamaged && req.incidentType != IncidentType.BREAKDOWN) {
-            add(Coverage.JACHA, "내 차 수리. ${term(Coverage.JACHA).deductible}")
+            add(Coverage.JACHA, "내 차 수리. ${term(Coverage.JACHA).deductible}이에요.")
             need(Coverage.JACHA, "내 차 수리비")
         }
         if (req.anyoneInjured) {

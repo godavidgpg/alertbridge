@@ -80,9 +80,9 @@ fun SecondaryAction(
         onClick, modifier.defaultMinSize(minHeight = height), enabled = enabled,
         shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-        contentPadding = PaddingValues(horizontal = Space.l, vertical = Space.m),
+        contentPadding = PaddingValues(horizontal = Space.s, vertical = Space.m),
     ) {
-        Text(text, style = if (large) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+        Text(text, style = if (large) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
     }
 }
 

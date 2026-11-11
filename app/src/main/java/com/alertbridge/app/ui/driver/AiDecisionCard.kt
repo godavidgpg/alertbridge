@@ -75,10 +75,9 @@ internal fun AiDecisionCard(s: UiState, vm: AppViewModel) {
 
 @Composable
 private fun SourcePill(src: DecisionSource) {
+    // Claude가 판단했을 때만 출처를 붙인다. 규칙 기반 대체 판단은 운전자에게 따로 이름 붙이지 않는다.
     if (src == DecisionSource.AI) {
         StatusPill(stringResource(R.string.ai_source_ai), MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
-    } else {
-        StatusPill(stringResource(R.string.ai_source_rules), MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
     }
 }
 
@@ -146,13 +145,8 @@ private fun Decision(d: AdvisorDecision, vm: AppViewModel) {
         }
     }
 
-    if (d.nextSteps.isNotEmpty()) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Text(stringResource(R.string.ai_next_steps), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        d.nextSteps.forEachIndexed { i, step -> Text("${i + 1}. $step", style = MaterialTheme.typography.bodyLarge) }
-    }
-
-    d.fallbackReason?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    // 할 일 순서는 대응 계획 하나로만 보여 준다. AI의 순서 제안과 대체 이유는 로직 뷰에서 본다.
+    Text(stringResource(R.string.d_mock_insurer), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Text(d.disclaimer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     TextButton(vm::runAdvisor) { Text(stringResource(R.string.ai_rerun)) }
 }

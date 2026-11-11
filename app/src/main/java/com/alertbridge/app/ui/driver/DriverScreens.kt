@@ -158,8 +158,6 @@ private fun Idle(r: EngineResult?, s: UiState, vm: AppViewModel) {
                 InfoRow(stringResource(R.string.idle_vehicle), vehicle)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 InfoRow(stringResource(R.string.idle_insurance), s.driver?.insurance?.insurer ?: stringResource(R.string.idle_insurance_none))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                InfoRow(stringResource(R.string.idle_ai), stringResource(if (vm.aiAvailable) R.string.idle_ai_on else R.string.idle_ai_off))
             }
         }
         Spacer(Modifier.height(Space.l))
@@ -226,9 +224,9 @@ private fun Confirm(r: EngineResult, s: UiState, vm: AppViewModel) {
                 Text(stringResource(R.string.d_countdown_confirm, it), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
             }
         }
-        PrimaryAction(stringResource(R.string.answer_yes), { vm.answer(TriageQ.IS_ACCIDENT, Answer.YES) }, tone = Tone.Danger, height = 96.dp)
+        PrimaryAction(stringResource(R.string.d_confirm_yes), { vm.answer(TriageQ.IS_ACCIDENT, Answer.YES) }, tone = Tone.Danger, height = 96.dp)
         Spacer(Modifier.height(Space.m))
-        SecondaryAction(stringResource(R.string.answer_no), { vm.answer(TriageQ.IS_ACCIDENT, Answer.NO) }, Modifier.fillMaxWidth(), height = 96.dp, large = true)
+        SecondaryAction(stringResource(R.string.d_confirm_no), { vm.answer(TriageQ.IS_ACCIDENT, Answer.NO) }, Modifier.fillMaxWidth(), height = 96.dp, large = true)
     }
 }
 
@@ -250,7 +248,8 @@ private fun Triage(r: EngineResult, s: UiState, vm: AppViewModel, slow: Boolean)
                 Text(stringResource(R.string.d_countdown, it), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        PrimaryAction(stringResource(R.string.answer_yes), { vm.answer(q, Answer.YES) }, enabled = ready, height = 80.dp)
+        // "예"가 위험을 뜻할 때도, 안전을 뜻할 때도 있어 의미 색을 쓰지 않는다.
+        PrimaryAction(stringResource(R.string.answer_yes), { vm.answer(q, Answer.YES) }, tone = Tone.Neutral, enabled = ready, height = 80.dp)
         Spacer(Modifier.height(Space.m))
         Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
             SecondaryAction(stringResource(R.string.answer_no), { vm.answer(q, Answer.NO) }, Modifier.weight(1f), enabled = ready, height = 80.dp, large = true)
@@ -290,6 +289,15 @@ private fun Plan(r: EngineResult, s: UiState, vm: AppViewModel, onConnect: (Acti
     }
 }
 
+@Composable
+private fun NumberBadge(n: Int, strong: Boolean) {
+    val bg = if (strong) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.surfaceVariant
+    val fg = if (strong) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface
+    Box(Modifier.size(28.dp).background(bg, CircleShape), contentAlignment = Alignment.Center) {
+        Text("$n", style = MaterialTheme.typography.labelLarge, color = fg)
+    }
+}
+
 private fun gradeTone(g: RiskGrade) = if (g == RiskGrade.R0) Tone.Danger else Tone.Primary
 
 /** 1순위 조치. 가장 크게 보여 준다. */
@@ -302,6 +310,8 @@ private fun HeroAction(a: Action, r: EngineResult, vm: AppViewModel, onConnect: 
         border = if (danger) sem.danger.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            NumberBadge(a.priority, strong = true)
+            Spacer(Modifier.width(Space.m))
             Text(a.title.text, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
             StatusChip(a.status)
         }
@@ -314,15 +324,14 @@ private fun HeroAction(a: Action, r: EngineResult, vm: AppViewModel, onConnect: 
 /** 이어서 할 일 한 줄. 누르면 펼쳐진다. */
 @Composable
 private fun ActionRow(a: Action, r: EngineResult, vm: AppViewModel, onConnect: () -> Unit, onOpenCard: () -> Unit) {
-    var open by remember { mutableStateOf(false) }
+    // 두 번째 조치는 펼쳐 둔다. 경미 사고에서 "보험사 사고 접수"가 첫 화면에 보이게 하기 위해서다.
+    var open by remember { mutableStateOf(a.priority == 2 && a.status != ActionStatus.CONFIRMED) }
     Column(verticalArrangement = Arrangement.spacedBy(Space.s)) {
         Row(
             Modifier.fillMaxWidth().clickable { open = !open }.defaultMinSize(minHeight = 56.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(28.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape), contentAlignment = Alignment.Center) {
-                Text("${a.priority}", style = MaterialTheme.typography.labelLarge)
-            }
+            NumberBadge(a.priority, strong = false)
             Spacer(Modifier.width(Space.m))
             Text(a.title.text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             StatusChip(a.status)

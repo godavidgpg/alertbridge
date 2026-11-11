@@ -130,11 +130,16 @@ private fun TopBar(s: UiState, tab: Int, onTab: (Int) -> Unit, onSource: () -> U
                 Icon(Icons.Filled.KeyboardArrowDown, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
-        SingleChoiceSegmentedButtonRow {
+        // 개발·시연용 전환이라 출시 빌드에서는 숨긴다.
+        if (BuildConfig.DEBUG) SingleChoiceSegmentedButtonRow {
             listOf(R.string.tab_driver, R.string.tab_logic).forEachIndexed { i, label ->
                 SegmentedButton(
                     selected = tab == i, onClick = { onTab(i) },
                     shape = SegmentedButtonDefaults.itemShape(i, 2), icon = {},
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = MaterialTheme.colorScheme.primary,
+                        activeContentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
                 ) { Text(stringResource(label), style = MaterialTheme.typography.labelLarge) }
             }
         }

@@ -5,7 +5,10 @@
 
     <!-- 대기 -->
     <string name="d_idle_title">안전 운전 중이에요</string>
-    <string name="d_idle_body">사고가 의심되면 먼저 여쭤볼게요.\n연결은 언제나 직접 누르셔야 시작돼요.</string>
+    <string name="d_idle_body">사고가 의심되면 먼저 여쭤볼게요.</string>
+    <string name="d_confirm_yes">네, 사고예요</string>
+    <string name="d_confirm_no">아니에요, 괜찮아요</string>
+    <string name="d_mock_insurer">보험 정보는 시연용 보험사 데이터예요.</string>
     <string name="d_idle_dismissed">사고가 아니라고 답하셔서 기록을 지웠어요.</string>
     <string name="d_idle_closed">사건을 닫았어요.</string>
     <string name="d_manual">사고가 났어요</string>
