@@ -1,129 +1,129 @@
 # AlertBridge
 
-차량 신호로 사고를 감지하고, 위험도를 **규칙으로** 판정해 지금 무엇을 먼저 해야 하는지(119, 대피, 112, 보험 접수 등) 안내하는 판단 엔진과, 그 판단 과정을 보여 주는 Android 앱.
+차량 신호로 사고를 감지하고, 위험도를 **규칙으로** 판정해 지금 무엇을 먼저 할지(119, 대피, 112 등) 안내합니다. 이어서 **AI(Claude)가 가입 보험을 조회해** 견인을 부를지, 어떤 담보로 보상받는지 판단하고, 사용자가 승인하면 보험사에 견인 요청·사고 접수까지 합니다.
 
-> **현재 단계:** 판단 엔진과 Pleos 어댑터 완성, 더미 차량 데이터로 검증 완료. 운전자용 화면(①~⑤)과 실차 연결은 남아 있음.
+> **현재 단계:** 판단 엔진, Pleos 어댑터, AI 보험 판단, 운전자 화면 ①~⑤ 완성. 실차 연결과 실제 보험사 API는 남아 있습니다.
 
 ## 진행 상황
 
-지시문의 완료 기준(DoD) 기준이다.
-
 | 항목 | 상태 | 비고 |
 |---|---|---|
-| `./gradlew :engine:test` (Android SDK 없이) | ✅ 522개 통과 | 단위·골든·불변 조건·무작위 입력 400세트 |
+| 판단 엔진 `./gradlew :engine:test` (Android SDK 없이) | ✅ 522개 통과 | 단위·골든·불변 조건·무작위 입력 400세트 |
 | 시나리오 S01~S12 골든 테스트 | ✅ | `engine/src/test/resources/scenarios/` |
-| 더미 Pleos 차량 → 어댑터 → 엔진 | ✅ 13개 통과 | 12개 시나리오를 SDK 형식으로 재생 |
-| `docs/pleos-api-mapping.md` | ✅ | SDK AAR을 직접 열어 확인한 시그니처 + 미확인(TODO) 목록 |
-| `docs/engine-contract.md` | ✅ | 팀원 통합 방법 |
-| `docs/policy-table.md` | ✅ | 정책 JSON에서 자동 생성 |
-| 연결 전 최종 확인, `ACTION_CALL` 미사용 | ✅ | 테스트로 검사 |
-| 운전자 화면 ①~⑤ (확인→질문→대응 계획→최종 확인→사건 카드) | ❌ | 로직 검증을 먼저 하느라 보류. 엔진은 필요한 값을 이미 낸다 |
-| 실차(Pleos 차량 서비스) 연결 | ❌ | 어댑터는 구현됨. 실차·시뮬레이터 확인 필요 |
-
-## 빠른 시작
-
-필요: JDK 17 이상 (Android Studio에 포함된 `jbr`를 써도 됨). 앱을 빌드하려면 Android SDK도 필요하다.
-
-```bash
-# 엔진만 (Android SDK 불필요)
-./gradlew :engine:test
-
-# 앱 (local.properties에 sdk.dir=... 또는 ANDROID_HOME 필요)
-./gradlew :app:testDebugUnitTest     # 더미 Pleos 차량 → 어댑터 → 엔진
-./gradlew :app:assembleDebug         # app/build/outputs/apk/debug/app-debug.apk
-
-# 정책을 고친 뒤
-./gradlew :engine:generatePolicyDoc  # docs/policy-table.md 재생성
-```
-
-Windows Git Bash 예: `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`
-
-Android SDK가 없으면 `:app` 모듈은 자동으로 빠지고 `:engine`만 빌드된다.
-
-## 앱에서 볼 수 있는 것
-
-세로 화면 하나에 판단 과정이 위에서 아래로 나온다.
-`기대값 비교 → 1 감지 → 질문 → 2 파손 추정 → 3 위험 등급 → 4 조치 계획 → 5 보험 매칭 → 6 사건 세션 → 엔진 입력 → Pleos 콜백`
-
-| 모드 | 입력 |
-|---|---|
-| **실시간 GPS** | 실제 위치 API(`LocationManager` + `Geocoder`). [수동 사고 신고]로 시작한다. 차량 신호는 "알 수 없음" |
-| **S01~S12** | 더미 차량이 **Pleos SDK의 실제 타입·콜백 형식**으로 값을 보내고 실제 어댑터를 거쳐 엔진에 들어간다. 기대값과 현재 값이 함께 표시된다 |
-| S01~S12 + [위치는 실제 GPS 사용] | 차량 신호는 더미, 위치만 실제 GPS. 도로 종류를 몰라 기대값과 달라질 수 있다 |
-
-에뮬레이터에서 위치를 넣으려면 `adb emu geo fix <경도> <위도>`를 쓴다.
-
-**디버그 빌드는 [신고 연결]을 눌러도 전화 앱을 열지 않는다.** 테스트 중 실수로 112·119에 걸리지 않게 하기 위해서다(`BuildConfig.OPEN_REAL_DIALER`). 릴리스 빌드에서만 번호를 띄운다.
+| Pleos SDK 형식 더미 차량 → 어댑터 → 엔진 | ✅ 23개 통과 (`:app`) | 12개 시나리오를 SDK 실제 타입·콜백으로 재생 |
+| AI 보험 판단 `./gradlew :agent:test` | ✅ 15개 통과 | 가짜 모델 루프 + 실제 SDK로 가짜 Claude 서버와 통신 |
+| 운전자 화면 ①~⑤ | ✅ | 확인 → 질문 → 대응 계획 → 최종 확인 → 사건 카드. 독립 UX 리뷰 반영 |
+| 차속(`CAR_SPEED`), 실시간 GPS, TTS | ✅ | 차속은 차량용 Android에서만 |
+| 실차(Pleos 차량 서비스) 연결 | ⚠️ | 코드는 있음. 실차·시뮬레이터로 확인 필요 |
+| 실제 Claude API 호출 | ⚠️ | API 키가 없어 실제 호출은 시험하지 못함. 키 넣는 법은 아래 |
+| 실제 보험사 API | ❌ | 지금은 시연용 보험사(`MockInsurerApi`) |
 
 ## 구조
 
 ```
-engine/   순수 Kotlin(JVM). Android·Pleos 의존성 없음. 모든 판단이 여기 있다
-  model/      입력·출력 모델 (Signal은 Pleos 메서드와 1:1)
-  detect/     사고 감지 (링 버퍼 60초, 트리거 규칙)
-  damage/     파손 추정 (충격 위치·심각도·주행 가능·탑승자)
-  risk/       위험 등급 R0~R4 (사실 계산 + 정책 규칙 해석)
-  action/     조치 계획, 신고 문장
-  coverage/   보험 담보 매칭 (참고 정보)
-  session/    사건 상태 기계
-  policy/     정책 테이블 로더·검증
-  resources/policy/policy_v1.json   임계값·규칙·조치 순서 (코드는 해석만 한다)
-  resources/messages_ko.json        사용자 문구
-app/      Android 앱 (Compose)
-  adapter/PleosSignalSource.kt   Pleos Vehicle SDK 2.3.2 → 엔진 입력 (실제 구현)
-  adapter/DummyPleosVehicle.kt   SDK 형식을 재현하는 더미 차량
-  adapter/LiveSignalSource.kt    실제 GPS
-  ui/                            로직 뷰
-docs/
-  pleos-api-mapping.md   SDK 확인 결과와 지시문과 다른 점
-  engine-contract.md     팀원 통합 방법
-  policy-table.md        정책 표 (자동 생성)
+engine/   순수 Kotlin. 규칙 기반 사고 판단 (감지·파손·위험 등급·조치 계획·세션)
+agent/    순수 Kotlin. AI 보험 판단 (Claude 도구 루프, 보험사 API, 규칙 대체 판단)
+app/      Android 앱 (Compose). 입력을 모아 엔진·에이전트에 넣고 결과를 그린다
+docs/     pleos-api-mapping.md, engine-contract.md, policy-table.md(자동 생성)
 ```
 
-## 팀원별 시작점
+```
+Pleos 센서 ─┐
+GPS·차속   ─┼─▶ engine (규칙) ─▶ 위험 등급·조치 계획 ─▶ 운전자 화면
+            │                        │
+            │                        ▼
+            └──────────────▶ agent (Claude) ─▶ 보험 조회 → 판단 → [사용자 승인] → 견인 요청·사고 접수
+```
 
-- **차량 센싱 / Pleos 연결:** [docs/engine-contract.md](docs/engine-contract.md) 6절 → `app/.../adapter/PleosSignalSource.kt`. 남은 일은 실제 `Vehicle` 서비스 연결, 차속(`CAR_SPEED`) 입력, [pleos-api-mapping.md](docs/pleos-api-mapping.md) 7절의 실차 확인 항목이다.
-- **UI:** 엔진 출력 `EngineResult` 하나만 보고 그리면 된다. 판단 로직은 UI에 넣지 않는다. 지금의 `LogicScreen.kt`가 어떤 값이 있는지 보여 주는 예시다.
-- **정책·문구:** `policy_v1.json`과 `messages_ko.json`만 고치고 `:engine:test`를 돌린다. 안전 원칙을 깨는 정책(R0 첫 조치가 119가 아님 등)은 로더가 거부한다.
+## AI 보험 판단 (`agent/`)
+
+- **모델:** `claude-opus-5-5` (Claude Java SDK 3.8.0). 거절되면 서버 측 대체 모델로 넘어가도록 켜 두었습니다.
+- **AI가 쓰는 도구:**
+
+| 도구 | 종류 | 하는 일 |
+|---|---|---|
+| `get_incident_summary` | 조회 | 규칙 엔진이 판단한 사고 요약 |
+| `get_insurance_policy` | 조회 | 가입 담보·한도·자기부담금·무료 견인 거리 |
+| `check_coverage` | 조회 | 이번 사고 유형에서 보상되는 담보 |
+| `quote_tow` | 조회 | 가까운 협력 정비소까지 거리, 초과 요금 |
+| `request_emergency_tow` | **실행** | 보험사 긴급출동 견인 접수 |
+| `file_accident_claim` | **실행** | 보험사 사고 접수 |
+| `submit_decision` | 결과 | 견인 여부, 담보별 보장, 요약 |
+
+- **실행 도구는 사용자가 승인 시트에서 [진행하기]를 눌러야만 실행됩니다.** 같은 조치는 한 번만 실행됩니다. 보험사가 준 접수번호는 엔진의 사건 기록에 남습니다.
+- **112·119 연결 도구는 AI에게 없습니다.** 인명 관련 판단과 연결은 규칙 엔진과 사람의 확인이 맡습니다.
+- **API 키가 없거나 AI가 실패하면 규칙 기반 판단으로 대신합니다.** 화면은 항상 결과를 보여 줍니다.
+
+### API 키 넣기
+
+`local.properties`(git에 올라가지 않음)에 추가한 뒤 앱을 다시 빌드합니다.
+
+```properties
+anthropic.apiKey=sk-ant-...
+```
+
+> **주의:** 키를 앱에 넣는 것은 시연용입니다. APK에서 키를 꺼낼 수 있으므로 배포할 때는 서버 프록시를 거쳐야 합니다.
+
+## 빠른 시작
+
+필요: JDK 17 이상(Android Studio의 `jbr`도 됨), 앱 빌드에는 Android SDK.
+
+```bash
+./gradlew :engine:test :agent:test       # Android SDK 불필요
+./gradlew :app:testDebugUnitTest         # 더미 Pleos 차량 → 어댑터 → 엔진
+./gradlew :app:assembleDebug             # app/build/outputs/apk/debug/app-debug.apk
+./gradlew :engine:generatePolicyDoc      # 정책을 고친 뒤 docs/policy-table.md 재생성
+```
+
+Windows Git Bash 예: `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`
+
+## 앱 사용법
+
+- 상단의 입력 이름(예: "실시간 GPS ▾")을 누르면 입력을 바꿀 수 있습니다.
+  - **실시간:** 실제 GPS(+ 차량용 Android면 차속, Pleos 서비스가 있으면 차량 신호). [사고가 났어요]로 시작합니다.
+  - **S01~S12:** 더미 차량이 Pleos SDK 형식으로 사고 상황을 재생합니다.
+- **운전자 / 로직 전환(디버그 빌드만):** 로직 탭에서 판단 과정, 기대값 비교, Pleos 콜백, AI 판단 원본을 봅니다. 재생 속도·자동 응답·실제 GPS 사용도 여기서 바꿉니다.
+- 에뮬레이터에서 위치 넣기: `adb emu geo fix <경도> <위도>`
+
+**디버그 빌드는 [신고 연결]을 눌러도 전화 앱을 열지 않습니다.** 테스트 중 실수로 112·119에 걸리지 않게 하기 위해서입니다. 릴리스 빌드에서만 번호를 띄웁니다(`ACTION_DIAL`, 발신은 사람이 직접).
 
 ## 안전 원칙 (바꾸지 않는다)
 
-- 112·119·보험사에 **자동 발신하지 않는다.** 사람이 확인 버튼을 눌러야 하고 `ACTION_DIAL`로 번호만 띄운다. 직접 발신 권한을 선언하지 않는다.
-- "연결 시도"와 "접수 완료"를 분리한다. 접수번호 입력 또는 완료 표시가 있어야 `CONFIRMED`가 된다.
-- 인명 위험(R0)이 있으면 `CALL_119`가 항상 1순위다.
-- 위험도·기관 선택은 규칙 기반이며 LLM을 쓰지 않는다.
-- 지원되지 않는 신호는 "없음"이 아니라 "알 수 없음"이다. (예: 에어백 API 미지원이면 "미전개"라고 말하지 않는다)
-- 사고 확정 전에는 신호·위치를 저장하지 않는다. 사고가 아니면 메모리 기록도 버린다.
-- 신고 문장에는 확실한(HIGH) 충격 위치만 넣는다. 추정은 화면과 사건 카드에만 남긴다.
+- 112·119·보험사에 **자동 발신하지 않습니다.** 앱에 직접 발신 권한이 없습니다.
+- AI가 실행하는 조치(견인 요청·사고 접수)는 **매번 사용자 승인**을 받습니다.
+- 인명 위험(R0)이면 `CALL_119`가 항상 1순위입니다. 위험 등급과 기관 선택은 규칙 기반이며 LLM을 쓰지 않습니다.
+- "연결 시도"와 "접수 완료"를 분리합니다. 접수번호가 있어야 완료입니다.
+- 지원되지 않는 신호는 "없음"이 아니라 "알 수 없음"입니다.
+- 사고 확정 전에는 신호·위치를 저장하지 않습니다.
+- 신고 문장에는 확실한 충격 위치만 넣습니다.
 
-**면책:** 파손 추정과 보험 매칭은 참고 정보다. 최종 보상 여부는 약관과 보험사 판단에 따릅니다. 사고 화면에서는 가입 권유 문구를 넣지 않는다.
+**면책:** 파손 추정과 보험 판단은 참고 정보입니다. 최종 보상 여부는 약관과 보험사 판단에 따릅니다. 가입 권유 문구는 넣지 않습니다.
 
-## 지시문과 달라진 점 (중요)
+## 팀원별 시작점
 
-SDK AAR을 직접 열어 확인한 결과다. 자세한 내용은 [pleos-api-mapping.md](docs/pleos-api-mapping.md).
+- **차량 센싱 / Pleos 연결:** [docs/engine-contract.md](docs/engine-contract.md) 6절, `app/.../adapter/PleosSignalSource.kt`, `LiveSources.kt`(차속·실차 연결). 실차에서 확인할 항목은 [pleos-api-mapping.md](docs/pleos-api-mapping.md) 7절에 있습니다.
+- **보험 연동:** `agent/.../insurance/InsurerApi.kt`의 인터페이스를 실제 보험사 API(제휴 API 또는 보험 마이데이터)로 구현하면 됩니다.
+- **AI 판단 개선:** `agent/.../advisor/InsuranceAdvisor.kt`의 시스템 프롬프트와 `ToolBox.kt`의 도구 정의를 고칩니다.
+- **UI:** `app/.../ui/driver/`(운전자 화면), `ui/theme/`(디자인 토큰: 색·글자·간격). 판단 로직은 UI에 넣지 않습니다.
+- **정책·문구:** `engine/src/main/resources/policy_v1.json`, `messages_ko.json`.
 
-- **SDK 버전:** 지시문은 `Vehicle:2.0.3`이지만 필요한 메서드(경고등, 배터리 잔량, 각종 check...Capabilities)는 **2.3.2**에만 있어 2.3.2를 쓴다.
-- **에어백:** 좌석별 `Boolean`만 주고 정면·측면 종류를 주지 않는다. 그래서 실차에서는 측면 충돌도 "앞(MEDIUM)"으로 추정되며, 신고 문장에는 넣지 않는다.
-- **비상등:** SDK에 없다. `T_STOP_HAZARD` 트리거는 실차에서 동작하지 않는다.
-- **도로 종류·km 지점:** `FusedLocation`, `NaviHelper` 어디에도 없다. 엔진이 "고속도로인가요?"를 묻고, 2504 긴급견인은 도로를 확실히 알 때만 제안한다.
-- **차량 크기:** `CarInfo`에 없어 사용자 등록값(`VehicleProfile`)으로 받는다.
-- **콜백 값:** Pleos 콜백 인자는 전부 nullable이다. null은 버리고 `false`로 바꾸지 않는다.
+## 지시문과 달라진 점
 
-지시문에 없던 규칙도 몇 가지 정했다.
-- 답이 없어도 차가 계속 달리면 R0로 올리지 않는다.
-- 화면을 조작 중인 사람(예: 119 통화 중)은 무응답으로 처리하지 않는다.
-- 사고 여부 "모르겠어요"는 사고로 보고 안내한다.
+- **SDK 버전:** 필요한 메서드가 2.3.2에만 있어 `Vehicle:2.3.2`를 씁니다.
+- **에어백:** 종류(정면·측면)를 주지 않습니다. 실차에서는 측면 충돌도 "앞(MEDIUM)"으로 추정되며, 신고 문장에는 넣지 않습니다.
+- **비상등, 도로 종류, 차량 크기:** SDK에 없습니다. 엔진은 고속도로인지 묻고, 2504 견인은 도로를 확실히 알 때만 제안합니다.
+- **LLM 사용:** 지시문은 판단에 LLM을 쓰지 않는다고 했지만, 요청에 따라 **보험 판단과 실행에만** Claude를 씁니다. 위험 등급·119 판단은 여전히 규칙 기반입니다.
+- **확인 질문:** "괜찮으세요? 사고인가요?"는 답 "예"의 뜻이 모호해 "사고가 났나요?"로 바꿨습니다.
+- 그 밖의 규칙: 계속 달리면 무응답으로 보지 않음, 화면을 조작 중이면 무응답 처리 안 함, "모르겠어요"는 사고로 안내.
 
-## 미완료
+## 남은 일
 
-- 운전자 화면 ①~⑤ (76dp 터치, 차량 실루엣, 신호 그래프, 사진, 인적사항 QR)
-- 실차 연결, 차속 입력, 도로 종류 데이터
-- TTS·STT·보호자 알림은 가짜 구현
+- 실차 연결 확인, 실제 Claude API 호출 확인(키 필요), 실제 보험사 API
+- TTS 외 STT·보호자 알림은 가짜 구현
 - 국토부 견인 운임표(`towFareTable`) 비어 있음
-- 릴리스 빌드 성능 미측정 (에뮬레이터 디버그 빌드는 시작이 느리다)
+- 릴리스 빌드 성능 미측정 (에뮬레이터 디버그 빌드는 시작이 느림)
+- 독립 디자인 리뷰 25/40 → 지적 사항 반영 후 재평가는 하지 않음
 
 ## 퍼미션
 
-현재: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `INTERNET`(역지오코딩). SDK가 `ai.pleos.playground.service.vehicle.VEHICLE_BINDING`을 병합한다.
-
-실차 연결 시 추가: `pleos.car.permission.CAR_SAFETY`, `CAR_SEATS`, `CAR_DOORS`, `CAR_LIGHTS`, `CAR_DRIVE`, `CAR_ENERGY`, `CAR_INFO`, `android.car.permission.CAR_SPEED`. Pleos 퍼미션은 App Market과 협의·승인된 범위에서만 쓸 수 있다.
+위치(`ACCESS_FINE/COARSE_LOCATION`), `INTERNET`(주소 변환·Claude API), `android.car.permission.CAR_SPEED`, `pleos.car.permission.CAR_SAFETY`·`CAR_SEATS`·`CAR_DOORS`·`CAR_LIGHTS`·`CAR_DRIVE`·`CAR_ENERGY`·`CAR_INFO`. Pleos 퍼미션은 App Market과 협의·승인된 범위에서만 쓸 수 있습니다.
