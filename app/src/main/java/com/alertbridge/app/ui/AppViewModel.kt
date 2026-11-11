@@ -362,13 +362,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             advisedSession = null
             _state.update { it.copy(advisor = AdvisorUi.Idle, pendingApproval = null) }
         }
-        _state.update { it.copy(nowMs = now, result = result) }
+        // 바뀐 것이 없으면 상태를 다시 만들지 않는다. 화면 재구성과 CPU 사용을 줄인다.
+        _state.update { if (it.result == result && it.nowMs / 1000 == now / 1000) it else it.copy(nowMs = now, result = result) }
     }
 
     private class Scripted(val tMs: Long, val apply: (AlertBridgeEngine) -> Unit)
 
     private companion object {
-        const val TICK_MS = 100L
+        const val TICK_MS = 250L
         const val DEMO_PROFILE = "profiles/driver_normal.json"
         const val MAX_INPUT_ROWS = 40
     }
