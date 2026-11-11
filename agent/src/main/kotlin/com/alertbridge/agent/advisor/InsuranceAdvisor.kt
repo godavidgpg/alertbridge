@@ -1,5 +1,8 @@
 package com.alertbridge.agent.advisor
 
+import com.alertbridge.agent.insurance.CostEstimate
+import com.alertbridge.agent.insurance.CostRequest
+import com.alertbridge.agent.insurance.CostService
 import com.alertbridge.agent.insurance.InsurerApi
 import com.alertbridge.engine.model.EngineResult
 import com.alertbridge.engine.model.Tri
@@ -25,17 +28,19 @@ class InsuranceAdvisor(
         insurer: InsurerApi,
         approve: suspend (ActionRequest) -> Boolean,
         onProgress: (AdvisorProgress) -> Unit = {},
+        costs: CostService? = null,
     ): AdvisorDecision {
         val brief = IncidentBriefs.from(result, vehicle)
-        val tools = ToolExecutor(brief, insurer)
-        val rules = suspend { RuleBasedAdvisor.decide(brief, insurer) }
+        val tools = ToolExecutor(brief, insurer, costs)
+        val rules = suspend { RuleBasedAdvisor.decide(brief, insurer, costs) }
         val m = model ?: return rules().copy(fallbackReason = "AI 키가 설정되지 않아 규칙으로 판단했어요.")
 
         val taken = mutableListOf<TakenAction>()
         val executedActions = mutableSetOf<String>()
+        var estimate: CostEstimate? = null
         return try {
             onProgress(AdvisorProgress.Thinking(1))
-            var turn = m.start(SYSTEM_PROMPT, userMessage(brief), Tools.all)
+            var turn = m.start(SYSTEM_PROMPT, userMessage(brief), Tools.forSession(costs != null))
             repeat(maxTurns) { i ->
                 when (turn.stop) {
                     StopKind.REFUSAL -> return rules().copy(actionsTaken = taken, fallbackReason = "AI가 이 요청에 답하지 않아 규칙으로 판단했어요.")
@@ -46,7 +51,8 @@ class InsuranceAdvisor(
                 if (submit != null) {
                     val d = ToolExecutor.parseDecision(submit.inputJson)
                         ?: return rules().copy(actionsTaken = taken, fallbackReason = "AI 판단 형식이 맞지 않아 규칙으로 판단했어요.")
-                    return d.copy(actionsTaken = taken)
+                    val e = estimate ?: costs?.let { runCatching { it.estimate(RuleBasedAdvisor.costRequest(brief)) }.getOrNull() }
+                    return withCosts(d.copy(actionsTaken = taken), e)
                 }
                 if (turn.toolCalls.isEmpty()) {
                     return rules().copy(actionsTaken = taken, fallbackReason = "AI가 판단을 제출하지 않아 규칙으로 판단했어요.")
@@ -66,6 +72,7 @@ class InsuranceAdvisor(
                     runCatching { tools.run(spec.name, call.inputJson) }
                         .map { out ->
                             if (spec.action) taken += TakenAction(spec.name, spec.label, referenceNo(out), message(out))
+                            if (spec == Tools.ESTIMATE_COSTS) estimate = runCatching { Json.decodeFromString(CostEstimate.serializer(), out) }.getOrNull()
                             ToolOutcome(call.id, out)
                         }
                         .getOrElse { e -> ToolOutcome(call.id, "실패: ${e.message}", isError = true) }
@@ -100,7 +107,9 @@ class InsuranceAdvisor(
 
             Your job:
             1. Call get_incident_summary and get_insurance_policy, then check_coverage for the right incident type. Use quote_tow when towing is in question.
-            2. Decide whether to call the insurer's emergency tow (YES / NO / UNSURE) and which coverages apply, with the expected out-of-pocket cost when the policy data allows it.
+               When estimate_claim_costs is available, call it too: it combines the terms the driver registered (deductible, limits, premium-surcharge threshold) with public claim statistics for the same vehicle class.
+            2. Decide whether to call the insurer's emergency tow (YES / NO / UNSURE) and which coverages apply, with the expected out-of-pocket cost.
+               Copy amounts from estimate_claim_costs exactly; never compute your own. If it reports the surcharge threshold may be exceeded, mention that in one short sentence of the summary, and suggest confirming with the insurer before deciding whether to claim. Do not tell the driver to skip a claim.
             3. Only when it is clearly warranted, request the action itself: request_emergency_tow when the car cannot be driven or must be moved off a dangerous road, file_accident_claim when a held coverage applies. These run only after the driver approves; if the driver declines, respect it and carry on.
             4. Finish by calling submit_decision exactly once.
 
@@ -108,7 +117,7 @@ class InsuranceAdvisor(
             - Emergency services (112/119) are handled outside your tools by the rule engine with the driver's confirmation. When the incident is life-threatening, tell the driver in next_steps that the 119 step comes first; never suggest delaying it for insurance.
             - Base coverage judgments only on the policy and coverage data the tools return. If something is not in the data, mark it CHECK_NEEDED rather than guessing.
             - Do not recommend buying insurance or adding riders. For coverages the driver does not hold, say only that it needs checking.
-            - Amounts from the insurer tool are examples from a demo insurer; present them as estimates.
+            - Amounts are estimates (public averages, not a repair quote); present them as such. Tow dispatch and claim filing go to a demo insurer.
             - Write everything the driver will read in short, plain Korean (해요체). No markdown.
         """.trimIndent()
     }
@@ -116,14 +125,22 @@ class InsuranceAdvisor(
 
 /** AI가 없거나 실패했을 때의 판단. 규칙 엔진 결과와 보험사 API만으로 정한다. */
 object RuleBasedAdvisor {
-    suspend fun decide(b: IncidentBrief, insurer: InsurerApi): AdvisorDecision {
-        val type = when {
-            b.kind == "FAULT" -> com.alertbridge.agent.insurance.IncidentType.BREAKDOWN
-            b.otherPartyFled -> com.alertbridge.agent.insurance.IncidentType.HIT_AND_RUN
-            b.pedestrianOrBicycle -> com.alertbridge.agent.insurance.IncidentType.PEDESTRIAN
-            b.evRisk -> com.alertbridge.agent.insurance.IncidentType.EV_BATTERY_DAMAGE
-            else -> com.alertbridge.agent.insurance.IncidentType.SINGLE_VEHICLE
-        }
+    fun incidentType(b: IncidentBrief) = when {
+        b.kind == "FAULT" -> com.alertbridge.agent.insurance.IncidentType.BREAKDOWN
+        b.otherPartyFled -> com.alertbridge.agent.insurance.IncidentType.HIT_AND_RUN
+        b.pedestrianOrBicycle -> com.alertbridge.agent.insurance.IncidentType.PEDESTRIAN
+        b.evRisk -> com.alertbridge.agent.insurance.IncidentType.EV_BATTERY_DAMAGE
+        else -> com.alertbridge.agent.insurance.IncidentType.SINGLE_VEHICLE
+    }
+
+    /** 규칙만으로 아는 범위의 비용 계산 요청. 상대 재물 손해는 알 수 없어 넣지 않는다 */
+    fun costRequest(b: IncidentBrief) = CostRequest(
+        incidentType(b), ownCarDamaged = b.kind != "FAULT", otherPropertyDamaged = false,
+        anyoneInjured = b.injuryReported || b.lifeThreatening,
+    )
+
+    suspend fun decide(b: IncidentBrief, insurer: InsurerApi, costs: CostService? = null): AdvisorDecision {
+        val type = incidentType(b)
         val check = insurer.checkCoverage(
             com.alertbridge.agent.insurance.CoverageRequest(type, b.injuryReported || b.lifeThreatening, b.kind != "FAULT")
         )
@@ -146,7 +163,8 @@ object RuleBasedAdvisor {
             if (check.items.any { it.coverage.name != "EMERGENCY_TOW" }) add("보험사에 사고를 접수하세요.")
             add("현장 사진을 찍어 두세요.")
         }
-        return AdvisorDecision(
+        val estimate = costs?.let { runCatching { it.estimate(costRequest(b)) }.getOrNull() }
+        return withCosts(AdvisorDecision(
             source = DecisionSource.RULES,
             callTow = tow,
             towReason = towReason,
@@ -154,6 +172,23 @@ object RuleBasedAdvisor {
             summary = if (verdicts.any { it.verdict == Verdict.COVERED }) "가입한 담보로 보상받을 수 있는 항목이 있어요." else "보상 가능 여부는 보험사 확인이 필요해요.",
             nextSteps = steps,
             disclaimer = check.disclaimer,
-        )
+        ), estimate)
     }
+}
+
+/**
+ * 계산된 비용을 결과에 붙이고, 담보별 본인 부담은 계산값으로 맞춘다.
+ * AI가 적은 금액이 계산과 다르면 계산값을 쓴다. 화면의 금액은 코드가 계산한 것만 나온다.
+ */
+internal fun withCosts(d: AdvisorDecision, e: CostEstimate?): AdvisorDecision {
+    if (e == null) return d
+    fun key(s: String) = s.replace(" ", "").replace("Ⅰ", "I").replace("Ⅱ", "II")
+    val byName = e.lines.associateBy { key(it.coverageName) }
+    return d.copy(
+        costEstimate = e,
+        coverage = d.coverage.map { v ->
+            val line = byName[key(v.item)] ?: return@map v.copy(outOfPocketKrw = null)
+            v.copy(outOfPocketKrw = line.outOfPocketKrw)
+        },
+    )
 }

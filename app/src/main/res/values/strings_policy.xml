@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pol_title">내 보험 등록</string>
+    <string name="pol_body">보험증권을 보고 입력해 주세요. 사고가 나면 이 정보와 실제 손해 통계로 본인 부담금을 계산해 드려요. 기기에만 저장돼요.</string>
+    <string name="pol_basic">기본 정보</string>
+    <string name="pol_insurer">보험사</string>
+    <string name="pol_product">상품명</string>
+    <string name="pol_policy_no">증권번호</string>
+    <string name="pol_emergency_phone">긴급출동 번호</string>
+    <string name="pol_claim_phone">사고 접수 번호</string>
+    <string name="pol_use">보험 종목</string>
+    <string name="pol_car_class">차종</string>
+    <string name="pol_coverages">가입 담보</string>
+    <string name="pol_daemul_limit">대물배상 한도</string>
+    <string name="pol_jacha">자기차량손해 자기부담금</string>
+    <string name="pol_jacha_rate">수리비의</string>
+    <string name="pol_jacha_min">최소</string>
+    <string name="pol_jacha_max">최대</string>
+    <string name="pol_surcharge">물적사고 할증 기준</string>
+    <string name="pol_surcharge_help">보험금이 이 금액을 넘으면 보험료가 더 오를 수 있어요. 증권의 \'물적사고 할증기준금액\'이에요.</string>
+    <string name="pol_free_tow">긴급출동 무료 견인 거리</string>
+    <string name="pol_save">저장하기</string>
+    <string name="pol_delete">등록 지우기</string>
+    <string name="pol_demo_prefill">예시 값이 채워져 있어요. 내 증권 내용으로 바꿔 주세요.</string>
+    <string name="pol_need_insurer">보험사와 긴급출동 번호를 입력해 주세요.</string>
+    <string name="pol_use_PERSONAL">개인용</string>
+    <string name="pol_use_BUSINESS">업무용</string>
+    <string name="pol_use_COMMERCIAL">영업용</string>
+    <string name="pol_class_SMALL">소형</string>
+    <string name="pol_class_MID">중형</string>
+    <string name="pol_class_LARGE">대형</string>
+    <string name="pol_class_MULTI">다인승</string>
+    <string name="pol_class_help">소형 1,600cc 이하 · 중형 1,600~2,000cc · 대형 2,000cc 초과 · 다인승 7~10인승</string>
+
+    <string name="idle_insurance_edit">보험 등록하기</string>
+    <string name="pol_edit">내 보험 수정</string>
+    <string name="idle_insurance_value">%1$s · %2$s</string>
+    <string name="idle_insurance_scenario">시나리오 보험 사용 중</string>
+
+    <!-- 예상 비용 -->
+    <string name="cost_title">예상 비용</string>
+    <string name="cost_typical">평균 손해액 %1$s 기준</string>
+    <string name="cost_oop">본인 부담 약 %1$s</string>
+    <string name="cost_oop_max">최대 %1$s</string>
+    <string name="cost_basis">근거: %1$s 평균 · %2$s</string>
+    <string name="cost_live">공공데이터 실시간</string>
+    <string name="cost_snapshot">앱 내장 통계</string>
+    <string name="cost_surcharge">할증 확인</string>
+</resources>

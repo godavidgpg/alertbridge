@@ -32,6 +32,8 @@ import com.alertbridge.agent.advisor.AdvisorDecision
 import com.alertbridge.agent.advisor.DecisionSource
 import com.alertbridge.agent.advisor.TowCall
 import com.alertbridge.agent.advisor.Verdict
+import com.alertbridge.agent.insurance.CostEstimate
+import com.alertbridge.agent.insurance.CostEstimator.approx
 import com.alertbridge.app.R
 import com.alertbridge.app.ui.AdvisorUi
 import com.alertbridge.app.ui.AppViewModel
@@ -123,11 +125,13 @@ private fun Decision(d: AdvisorDecision, vm: AppViewModel) {
                         )
                     }
                     Text(c.note, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    c.outOfPocketKrw?.let { Text(stringResource(R.string.ai_out_of_pocket, won(it)), style = MaterialTheme.typography.labelLarge) }
+                    c.outOfPocketKrw?.takeIf { d.costEstimate == null }?.let { Text(stringResource(R.string.ai_out_of_pocket, won(it)), style = MaterialTheme.typography.labelLarge) }
                 }
             }
         }
     }
+
+    d.costEstimate?.takeIf { it.lines.isNotEmpty() }?.let { CostSection(it) }
 
     if (d.actionsTaken.isNotEmpty()) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -175,4 +179,46 @@ internal fun ApprovalSheet(req: ActionRequest, vm: AppViewModel) {
             SecondaryAction(stringResource(R.string.approve_no), { vm.answerApproval(false) }, Modifier.fillMaxWidth())
         }
     }
+}
+
+/** 등록한 보험 조건과 공공 손해 통계로 계산한 예상 비용. 금액은 모두 코드가 계산한 값이다 */
+@Composable
+private fun CostSection(e: CostEstimate) {
+    val sem = AB.semantic
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    Text(stringResource(R.string.cost_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    e.lines.forEach { l ->
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(l.coverageName, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                l.outOfPocketKrw?.let { v ->
+                    Text(stringResource(R.string.cost_oop, approx(v)), style = MaterialTheme.typography.titleMedium, color = if (v == 0L) sem.success else MaterialTheme.colorScheme.onSurface)
+                }
+            }
+            val sub = listOfNotNull(
+                l.outOfPocketMaxKrw?.takeIf { l.held }?.let { stringResource(R.string.cost_oop_max, approx(it)) },
+                l.typicalLossKrw?.let { stringResource(R.string.cost_typical, approx(it)) },
+            ).joinToString(" · ")
+            if (sub.isNotBlank()) Text(sub, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(l.note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    e.surcharge?.let { sc ->
+        val (fg, bg) = if (sc.likelyExceeds) sem.warning to sem.warningContainer else sem.success to sem.successContainer
+        SectionCard(container = bg, border = androidx.compose.ui.graphics.Color.Transparent) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (sc.likelyExceeds) Icons.Filled.Info else Icons.Filled.CheckCircle, null, tint = fg)
+                Spacer(Modifier.width(Space.s))
+                Text(stringResource(R.string.cost_surcharge), style = MaterialTheme.typography.titleSmall, color = fg)
+            }
+            Text(sc.note, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+    e.basis?.let { basis ->
+        Text(
+            stringResource(R.string.cost_basis, basis, stringResource(if (e.liveStats) R.string.cost_live else R.string.cost_snapshot)),
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    Text(e.disclaimer, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

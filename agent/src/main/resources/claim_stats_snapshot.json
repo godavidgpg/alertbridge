@@ -1,0 +1,566 @@
+{
+"source": "금융위원회_자동차보험가입정보 손해상황 (공공데이터포털)",
+"note": "연초부터 누계. 건수 = injPtlCnt + dthTotlCnt",
+"rows": [
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기차량손해",
+"carClass": "화물",
+"lossKrw": 12907308000,
+"cases": 5195
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기차량손해",
+"carClass": "승합",
+"lossKrw": 303056000,
+"cases": 92
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기차량손해",
+"carClass": "승용",
+"lossKrw": 461820000,
+"cases": 225
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기차량손해",
+"carClass": "대여",
+"lossKrw": 17503748000,
+"cases": 7985
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기차량손해",
+"carClass": "기타",
+"lossKrw": 420912000,
+"cases": 200
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기신체사고",
+"carClass": "화물",
+"lossKrw": 5556736000,
+"cases": 1547
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기신체사고",
+"carClass": "승합",
+"lossKrw": 28000000,
+"cases": 13
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기신체사고",
+"carClass": "승용",
+"lossKrw": 144622000,
+"cases": 117
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기신체사고",
+"carClass": "대여",
+"lossKrw": 3852001000,
+"cases": 7018
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "자기신체사고",
+"carClass": "기타",
+"lossKrw": 4355455000,
+"cases": 531
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상2",
+"carClass": "화물",
+"lossKrw": 75425511000,
+"cases": 23968
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상2",
+"carClass": "승합",
+"lossKrw": 16130778000,
+"cases": 4540
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상2",
+"carClass": "승용",
+"lossKrw": 9068615000,
+"cases": 2936
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상2",
+"carClass": "대여",
+"lossKrw": 77973698000,
+"cases": 33356
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상2",
+"carClass": "기타",
+"lossKrw": 43135537000,
+"cases": 11617
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상1",
+"carClass": "화물",
+"lossKrw": 33397188000,
+"cases": 25714
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상1",
+"carClass": "승합",
+"lossKrw": 8656411000,
+"cases": 5271
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상1",
+"carClass": "승용",
+"lossKrw": 3544132000,
+"cases": 3306
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상1",
+"carClass": "대여",
+"lossKrw": 37929948000,
+"cases": 38797
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대인배상1",
+"carClass": "기타",
+"lossKrw": 20201088000,
+"cases": 12658
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대물배상",
+"carClass": "화물",
+"lossKrw": 156097961000,
+"cases": 53096
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대물배상",
+"carClass": "승합",
+"lossKrw": 11696646000,
+"cases": 3455
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대물배상",
+"carClass": "승용",
+"lossKrw": 7029306000,
+"cases": 2764
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대물배상",
+"carClass": "대여",
+"lossKrw": 127623455000,
+"cases": 67998
+},
+{
+"ym": "202608",
+"use": "영업용",
+"coverage": "대물배상",
+"carClass": "기타",
+"lossKrw": 86991787000,
+"cases": 21200
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기차량손해",
+"carClass": "화물",
+"lossKrw": 143365782000,
+"cases": 70786
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기차량손해",
+"carClass": "승합",
+"lossKrw": 26896440000,
+"cases": 17705
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기차량손해",
+"carClass": "승용",
+"lossKrw": 216404483000,
+"cases": 76163
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기차량손해",
+"carClass": "기타",
+"lossKrw": 5574692000,
+"cases": 1303
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기신체사고",
+"carClass": "화물",
+"lossKrw": 59544640000,
+"cases": 11708
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기신체사고",
+"carClass": "승합",
+"lossKrw": 5150810000,
+"cases": 2213
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기신체사고",
+"carClass": "승용",
+"lossKrw": 10322764000,
+"cases": 5538
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "자기신체사고",
+"carClass": "기타",
+"lossKrw": 1671700000,
+"cases": 179
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상2",
+"carClass": "화물",
+"lossKrw": 278424580000,
+"cases": 102816
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상2",
+"carClass": "승합",
+"lossKrw": 47573160000,
+"cases": 18380
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상2",
+"carClass": "승용",
+"lossKrw": 90913978000,
+"cases": 39200
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상2",
+"carClass": "기타",
+"lossKrw": 6592913000,
+"cases": 1755
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상1",
+"carClass": "화물",
+"lossKrw": 144687349000,
+"cases": 121094
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상1",
+"carClass": "승합",
+"lossKrw": 25824728000,
+"cases": 22815
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상1",
+"carClass": "승용",
+"lossKrw": 43634156000,
+"cases": 45631
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대인배상1",
+"carClass": "기타",
+"lossKrw": 3610431000,
+"cases": 2121
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대물배상",
+"carClass": "화물",
+"lossKrw": 616772033000,
+"cases": 265313
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대물배상",
+"carClass": "승합",
+"lossKrw": 75263100000,
+"cases": 37957
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대물배상",
+"carClass": "승용",
+"lossKrw": 160458354000,
+"cases": 77819
+},
+{
+"ym": "202608",
+"use": "업무용",
+"coverage": "대물배상",
+"carClass": "기타",
+"lossKrw": 15374332000,
+"cases": 5390
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기차량손해",
+"carClass": "중형",
+"lossKrw": 649152593000,
+"cases": 263111
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기차량손해",
+"carClass": "소형",
+"lossKrw": 447215946000,
+"cases": 297186
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기차량손해",
+"carClass": "대형",
+"lossKrw": 503257293000,
+"cases": 208338
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기차량손해",
+"carClass": "다인승",
+"lossKrw": 158580030000,
+"cases": 84344
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기차량손해",
+"carClass": "기타",
+"lossKrw": 444000,
+"cases": 1
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기신체사고",
+"carClass": "중형",
+"lossKrw": 66243563000,
+"cases": 38581
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기신체사고",
+"carClass": "소형",
+"lossKrw": 82856295000,
+"cases": 47670
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기신체사고",
+"carClass": "대형",
+"lossKrw": 43473052000,
+"cases": 25047
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기신체사고",
+"carClass": "다인승",
+"lossKrw": 22320271000,
+"cases": 12456
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "자기신체사고",
+"carClass": "기타",
+"lossKrw": 0,
+"cases": 0
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상2",
+"carClass": "중형",
+"lossKrw": 500790174000,
+"cases": 212579
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상2",
+"carClass": "소형",
+"lossKrw": 568423314000,
+"cases": 245324
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상2",
+"carClass": "대형",
+"lossKrw": 318192437000,
+"cases": 136329
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상2",
+"carClass": "다인승",
+"lossKrw": 158328467000,
+"cases": 66460
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상2",
+"carClass": "기타",
+"lossKrw": 21097000,
+"cases": 1
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상1",
+"carClass": "중형",
+"lossKrw": 246002308000,
+"cases": 251456
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상1",
+"carClass": "소형",
+"lossKrw": 278153962000,
+"cases": 288009
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상1",
+"carClass": "대형",
+"lossKrw": 161584774000,
+"cases": 161363
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상1",
+"carClass": "다인승",
+"lossKrw": 79785519000,
+"cases": 78140
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대인배상1",
+"carClass": "기타",
+"lossKrw": 20466000,
+"cases": 0
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대물배상",
+"carClass": "중형",
+"lossKrw": 819098479000,
+"cases": 409203
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대물배상",
+"carClass": "소형",
+"lossKrw": 867427077000,
+"cases": 461202
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대물배상",
+"carClass": "대형",
+"lossKrw": 567596792000,
+"cases": 279724
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대물배상",
+"carClass": "다인승",
+"lossKrw": 282743177000,
+"cases": 139393
+},
+{
+"ym": "202608",
+"use": "개인용",
+"coverage": "대물배상",
+"carClass": "기타",
+"lossKrw": -900000,
+"cases": 0
+}
+]
+}

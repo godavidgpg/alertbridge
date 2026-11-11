@@ -38,6 +38,10 @@ android {
     }
     val anthropicKey = localProps.getProperty("anthropic.apiKey") ?: System.getenv("ANTHROPIC_API_KEY") ?: ""
     defaultConfig { buildConfigField("String", "ANTHROPIC_API_KEY", "\"$anthropicKey\"") }
+    // 공공데이터포털 자동차보험 통계 키. local.properties의 datagokr.serviceKey 또는 환경 변수 DATAGOKR_SERVICE_KEY.
+    // 없으면 앱에 내장한 통계(2026년 1~8월 누계)를 쓴다.
+    val dataGoKrKey = localProps.getProperty("datagokr.serviceKey") ?: System.getenv("DATAGOKR_SERVICE_KEY") ?: ""
+    defaultConfig { buildConfigField("String", "DATAGOKR_SERVICE_KEY", "\"$dataGoKrKey\"") }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

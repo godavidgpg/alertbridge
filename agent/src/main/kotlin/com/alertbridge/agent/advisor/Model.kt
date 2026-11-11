@@ -36,6 +36,8 @@ data class AdvisorDecision(
     /** AI가 실패해 규칙으로 대신했을 때의 이유 */
     val fallbackReason: String? = null,
     val disclaimer: String = "최종 보상 여부는 약관과 보험사 판단에 따릅니다.",
+    /** 등록한 보험 조건 + 공공 손해 통계로 코드가 계산한 예상 비용. 화면의 금액은 여기서만 나온다 */
+    val costEstimate: com.alertbridge.agent.insurance.CostEstimate? = null,
 )
 
 /** AI가 실행하려는 조치. 사용자가 승인해야 실행된다. */

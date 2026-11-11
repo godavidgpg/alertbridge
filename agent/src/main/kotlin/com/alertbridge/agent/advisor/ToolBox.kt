@@ -1,6 +1,9 @@
 package com.alertbridge.agent.advisor
 
 import com.alertbridge.agent.insurance.ClaimRequest
+import com.alertbridge.agent.insurance.CostEstimate
+import com.alertbridge.agent.insurance.CostRequest
+import com.alertbridge.agent.insurance.CostService
 import com.alertbridge.agent.insurance.CoverageRequest
 import com.alertbridge.agent.insurance.IncidentType
 import com.alertbridge.agent.insurance.InsurerApi
@@ -74,6 +77,18 @@ object Tools {
         obj("destination_km" to num("원하는 목적지까지 거리(km). 모르면 -1")),
         action = false, label = "견인 거리·요금 계산",
     )
+    val ESTIMATE_COSTS = ToolSpec(
+        "estimate_claim_costs",
+        "가입할 때 등록한 보험 조건(자기부담금, 한도, 할증 기준)과 공공 손해 통계(같은 종목·차종의 건당 평균 손해액)를 합쳐 " +
+            "담보별 예상 본인 부담과 보험료 할증 기준 초과 가능성을 계산한다. 금액은 이 도구가 계산한 값을 그대로 쓴다.",
+        obj(
+            "incident_type" to enumOf("사고 유형", IncidentType.entries.map { it.name }),
+            "own_car_damaged" to bool("내 차가 손상됐는지"),
+            "other_property_damaged" to bool("상대 차량이나 시설물 등 남의 재물이 손상됐는지"),
+            "anyone_injured" to bool("다친 사람이 있는지"),
+        ),
+        action = false, label = "예상 비용 계산",
+    )
     val REQUEST_TOW = ToolSpec(
         "request_emergency_tow",
         "보험사 긴급출동 견인을 실제로 접수한다. 사용자 승인 후에만 실행된다. 주행 불가이거나 2차 사고 위험으로 차를 옮겨야 할 때만 쓴다.",
@@ -116,14 +131,18 @@ object Tools {
         action = false, label = "판단 정리",
     )
 
-    val all = listOf(GET_INCIDENT, GET_POLICY, CHECK_COVERAGE, QUOTE_TOW, REQUEST_TOW, FILE_CLAIM, SUBMIT)
+    val all = listOf(GET_INCIDENT, GET_POLICY, CHECK_COVERAGE, ESTIMATE_COSTS, QUOTE_TOW, REQUEST_TOW, FILE_CLAIM, SUBMIT)
     fun byName(name: String) = all.firstOrNull { it.name == name }
+
+    /** 비용 계산을 쓸 수 없으면(등록 정보·통계 없음) 그 도구는 빼고 준다 */
+    fun forSession(costs: Boolean) = if (costs) all else all - ESTIMATE_COSTS
 }
 
 /** 도구 실행. 보험사 API와 사고 요약에 연결한다. 결과는 모델에게 돌려줄 JSON 문자열이다. */
 class ToolExecutor(
     private val brief: IncidentBrief,
     private val insurer: InsurerApi,
+    private val costs: CostService? = null,
 ) {
     private val json = Json { encodeDefaults = true }
 
@@ -137,6 +156,10 @@ class ToolExecutor(
                 insurer.checkCoverage(
                     CoverageRequest(incidentType(input), input.bool("anyone_injured"), input.bool("own_car_damaged"))
                 ),
+            )
+            Tools.ESTIMATE_COSTS.name -> json.encodeToString(
+                CostEstimate.serializer(),
+                (costs ?: throw IllegalStateException("등록된 보험 정보가 없어 비용을 계산할 수 없어요.")).estimate(costRequest(input)),
             )
             Tools.QUOTE_TOW.name -> {
                 val dest = input["destination_km"]?.jsonPrimitive?.doubleOrNull?.takeIf { it >= 0 }
@@ -161,6 +184,10 @@ class ToolExecutor(
             else -> throw IllegalArgumentException("알 수 없는 도구: $name")
         }
     }
+
+    fun costRequest(o: JsonObject) = CostRequest(
+        incidentType(o), o.bool("own_car_damaged"), o.bool("other_property_damaged"), o.bool("anyone_injured"),
+    )
 
     private fun incidentType(o: JsonObject) =
         o.str("incident_type").let { v -> IncidentType.entries.firstOrNull { it.name == v } } ?: IncidentType.SINGLE_VEHICLE

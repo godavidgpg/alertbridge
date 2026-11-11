@@ -26,7 +26,28 @@ data class InsurancePolicy(
     val coverages: Set<Coverage> = emptySet(),
     val freeTowKm: Int? = null,
     val evBattery: EvBatteryInfo? = null,
+    // 아래는 가입할 때 사용자가 등록한 상품 정보다. 위험 판단에는 쓰지 않고 비용 추정에만 쓴다.
+    val productName: String? = null,
+    /** 보험 종목. 공공 통계(개인용/업무용/영업용)와 맞춘다 */
+    val vehicleUse: VehicleUse = VehicleUse.PERSONAL,
+    /** 보험 차종 구분. 공공 통계(소형/중형/대형/다인승)와 맞춘다 */
+    val carClass: InsuredCarClass = InsuredCarClass.UNKNOWN,
+    val daemulLimitKrw: Long? = null,
+    /** 자기차량손해 자기부담금 조건 */
+    val jachaDeductible: DeductibleRule? = null,
+    /** 물적사고 할증기준금액. 보험금이 이 금액을 넘으면 사고 점수가 높아진다 */
+    val propertySurchargeThresholdKrw: Long? = null,
 )
+
+@Serializable enum class VehicleUse(val statName: String) { PERSONAL("개인용"), BUSINESS("업무용"), COMMERCIAL("영업용") }
+
+@Serializable enum class InsuredCarClass(val statName: String?) { SMALL("소형"), MID("중형"), LARGE("대형"), MULTI("다인승"), UNKNOWN(null) }
+
+/** 자기부담금 = 손해액 × [ratePct]%, [minKrw]~[maxKrw] 사이 */
+@Serializable
+data class DeductibleRule(val ratePct: Int, val minKrw: Long, val maxKrw: Long) {
+    fun apply(lossKrw: Long): Long = (lossKrw * ratePct / 100).coerceIn(minKrw, maxOf(minKrw, maxKrw))
+}
 
 @Serializable
 data class OccupantProfile(

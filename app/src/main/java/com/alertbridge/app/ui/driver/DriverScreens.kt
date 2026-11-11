@@ -135,6 +135,14 @@ internal fun BigOutlined(text: String, onClick: () -> Unit, modifier: Modifier =
 // 대기
 @Composable
 private fun Idle(r: EngineResult?, s: UiState, vm: AppViewModel) {
+    var policySheet by rememberSaveable { mutableStateOf(false) }
+    if (policySheet) {
+        val initial = s.myPolicy ?: vm.demoPolicy()
+        com.alertbridge.app.ui.policy.PolicySheet(
+            initial, isDemo = s.myPolicy == null, canDelete = s.myPolicy != null,
+            onSave = vm::savePolicy, onClose = { policySheet = false },
+        )
+    }
     Column(Modifier.fillMaxSize().padding(Space.l)) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.l)) {
             Spacer(Modifier.height(Space.s))
@@ -157,7 +165,26 @@ private fun Idle(r: EngineResult?, s: UiState, vm: AppViewModel) {
                 }
                 InfoRow(stringResource(R.string.idle_vehicle), vehicle)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                InfoRow(stringResource(R.string.idle_insurance), s.driver?.insurance?.insurer ?: stringResource(R.string.idle_insurance_none))
+                val ins = s.driver?.insurance
+                InfoRow(
+                    stringResource(R.string.idle_insurance),
+                    when {
+                        s.scenario != null -> stringResource(R.string.idle_insurance_scenario)
+                        s.myPolicy != null -> stringResource(R.string.idle_insurance_value, s.myPolicy.insurer, com.alertbridge.app.ui.policy.classLabel(s.myPolicy.carClass))
+                        else -> ins?.insurer?.let { "$it (예시)" } ?: stringResource(R.string.idle_insurance_none)
+                    },
+                )
+            }
+            if (s.scenario == null && s.myPolicy != null) {
+                androidx.compose.material3.TextButton({ policySheet = true }) { Text(stringResource(R.string.pol_edit)) }
+            }
+            // 처음 쓰는 사람에게 보험 등록을 권한다. 등록하지 않아도 예시 보험으로 동작한다.
+            if (s.scenario == null && s.myPolicy == null) {
+                SectionCard(container = MaterialTheme.colorScheme.secondaryContainer, border = Color.Transparent) {
+                    Text(stringResource(R.string.pol_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.pol_body), style = MaterialTheme.typography.bodyMedium)
+                    SecondaryAction(stringResource(R.string.idle_insurance_edit), { policySheet = true }, Modifier.fillMaxWidth())
+                }
             }
         }
         Spacer(Modifier.height(Space.l))

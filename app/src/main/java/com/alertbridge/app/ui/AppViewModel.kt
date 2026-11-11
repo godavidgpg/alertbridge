@@ -42,7 +42,13 @@ import com.alertbridge.agent.advisor.AdvisorProgress
 import com.alertbridge.agent.advisor.ClaudeAgentModel
 import com.alertbridge.agent.advisor.InsuranceAdvisor
 import com.alertbridge.agent.advisor.Tools
+import com.alertbridge.agent.insurance.CostService
 import com.alertbridge.agent.insurance.MockInsurerApi
+import com.alertbridge.agent.stats.ClaimStats
+import com.alertbridge.agent.stats.DataGoKrClaimStats
+import com.alertbridge.agent.stats.SnapshotClaimStats
+import com.alertbridge.app.data.PolicyStore
+import com.alertbridge.engine.model.InsurancePolicy
 import com.alertbridge.engine.model.IncidentKind
 import com.alertbridge.engine.model.SessionState
 import com.alertbridge.engine.model.VehicleProfile
@@ -94,6 +100,8 @@ data class UiState(
     val advisor: AdvisorUi = AdvisorUi.Idle,
     /** AI가 실행하려는 조치. 사용자 승인을 기다린다 */
     val pendingApproval: ActionRequest? = null,
+    /** 가입할 때 등록한 내 보험. 실시간 모드에서 쓴다 (시나리오는 시나리오의 프로필을 쓴다) */
+    val myPolicy: InsurancePolicy? = null,
 )
 
 /**
@@ -128,10 +136,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var approval: CompletableDeferred<Boolean>? = null
     private var advisedSession: Long? = null
 
+    private val policyStore = PolicyStore(app)
+
+    /** 공공 손해 통계. 키가 없으면 앱에 내장한 통계를 쓴다. 한 번 받으면 앱이 켜져 있는 동안 다시 받지 않는다 */
+    private val claimStats: ClaimStats =
+        if (BuildConfig.DATAGOKR_SERVICE_KEY.isBlank()) SnapshotClaimStats else DataGoKrClaimStats(BuildConfig.DATAGOKR_SERVICE_KEY)
+
     private fun readAsset(path: String) = getApplication<Application>().assets.open(path).use { it.readBytes().toString(Charsets.UTF_8) }
 
     init {
+        _state.update { it.copy(myPolicy = policyStore.load()) }
         startLive()
+    }
+
+    /** 데모 운전자의 보험. 등록 화면의 처음 값으로 쓴다 */
+    fun demoPolicy(): InsurancePolicy? = ScenarioJson.profile(readAsset(DEMO_PROFILE)).insurance
+
+    /** 보험 등록·수정. 실시간 대기 중이면 바로 반영하고, 사고 처리 중이면 다음 실시간 시작부터 반영한다 */
+    fun savePolicy(p: InsurancePolicy?) {
+        if (p == null) policyStore.clear() else policyStore.save(p)
+        _state.update { it.copy(myPolicy = p) }
+        val st = _state.value
+        val idle = st.result == null || st.result.session.state in setOf(SessionState.DISMISSED, SessionState.CLOSED)
+        if (st.scenario == null && idle) startLive()
     }
 
     /** 실제 위치 API로 시작한다. 차량 신호 없이도 수동 신고는 동작한다. */
@@ -177,7 +204,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         job?.cancel()
         lastQuestion = null
         // 실시간 모드에는 프로필 선택 화면이 없어 데모 운전자를 쓴다.
-        val driver = ScenarioJson.profile(readAsset(s?.profile ?: DEMO_PROFILE))
+        val base = ScenarioJson.profile(readAsset(s?.profile ?: DEMO_PROFILE))
+        // 실시간 모드는 사용자가 등록한 보험을 쓴다. 등록하지 않았으면 데모 운전자의 보험을 쓴다.
+        val driver = if (s == null) _state.value.myPolicy?.let { base.copy(insurance = it) } ?: base else base
         this.driver = driver
         this.vehicle = s?.vehicle
         advisorJob?.cancel()
@@ -186,7 +215,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val eng = AlertBridgeEngine.withDefaultPolicy()
         engine = eng
         source = src
-        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps, driver = driver) }
+        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps, driver = driver, myPolicy = it.myPolicy) }
         job = viewModelScope.launch {
             val caps = src.capabilities()
             eng.configure(caps, driver, s?.vehicle)
@@ -277,6 +306,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     result = r,
                     vehicle = v,
                     insurer = MockInsurerApi(insurance),
+                    costs = CostService(insurance, claimStats),
                     approve = { req -> awaitApproval(req) },
                     onProgress = { p ->
                         val label = (p as? AdvisorProgress.Calling)?.label

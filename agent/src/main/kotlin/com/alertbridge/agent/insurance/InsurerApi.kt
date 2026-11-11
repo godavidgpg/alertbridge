@@ -40,6 +40,11 @@ data class PolicyInfo(
     val freeTowKm: Int?,
     val emergencyServicesLeftThisYear: Int,
     val note: String,
+    /** 가입할 때 등록한 상품 정보 */
+    val productName: String? = null,
+    val vehicleUse: String? = null,
+    val carClass: String? = null,
+    val propertySurchargeThresholdKrw: Long? = null,
 )
 
 @Serializable
@@ -77,8 +82,8 @@ data class ClaimRequest(val incidentType: IncidentType, val summary: String, val
 data class ClaimResult(val claimNo: String, val message: String)
 
 /**
- * 시연용 보험사. 등록된 보험 프로필에서 약관을 만든다.
- * 요율·자기부담금은 흔한 국내 자동차보험 구조를 흉내 낸 **예시 값**이며 실제 상품이 아니다.
+ * 시연용 보험사. 가입할 때 등록한 보험 정보(담보, 한도, 자기부담금)로 약관을 만든다.
+ * 등록하지 않은 한도는 흔한 국내 자동차보험 구조를 흉내 낸 **예시 값**이다. 견인·사고 접수는 실제로 보내지 않는다.
  */
 class MockInsurerApi(
     private val policy: InsurancePolicy,
@@ -98,20 +103,22 @@ class MockInsurerApi(
     )
 
     private fun term(c: Coverage): CoverageTerm = when (c) {
-        Coverage.DAEIN_1 -> CoverageTerm(c, "대인배상 I", limitKrw = 150_000_000)
-        Coverage.DAEIN_2 -> CoverageTerm(c, "대인배상 II", limitKrw = null)
-        Coverage.DAEMUL -> CoverageTerm(c, "대물배상", limitKrw = 1_000_000_000)
-        Coverage.JASIN -> CoverageTerm(c, "자기신체사고", limitKrw = 50_000_000)
-        Coverage.JASANG -> CoverageTerm(c, "자동차상해", limitKrw = 100_000_000)
-        Coverage.JACHA -> CoverageTerm(c, "자기차량손해", deductible = "자기부담금은 손해액의 20%, 최소 20만 원 최대 50만 원")
-        Coverage.MUBOHEOM -> CoverageTerm(c, "무보험차상해", limitKrw = 200_000_000)
-        Coverage.EMERGENCY_TOW -> CoverageTerm(c, "긴급출동 견인", deductible = "무료 거리를 넘으면 km당 2,500원")
-        Coverage.EV_BATTERY_NEW_VALUE -> CoverageTerm(c, "배터리 신가 보상")
-        Coverage.EV_TOW_SOS -> CoverageTerm(c, "전기차 긴급출동")
-        Coverage.REMOTE_RETURN -> CoverageTerm(c, "원격지 귀가")
-        Coverage.TRANSPORT_COST -> CoverageTerm(c, "대체 교통비")
-        Coverage.LEGAL_COST -> CoverageTerm(c, "법률 비용")
-        Coverage.OTHER_CAR -> CoverageTerm(c, "다른 차 운전")
+        Coverage.DAEIN_1 -> CoverageTerm(c, coverageName(c), limitKrw = 150_000_000)
+        Coverage.DAEIN_2 -> CoverageTerm(c, coverageName(c), limitKrw = null)
+        Coverage.DAEMUL -> CoverageTerm(c, coverageName(c), limitKrw = policy.daemulLimitKrw ?: 1_000_000_000)
+        Coverage.JASIN -> CoverageTerm(c, coverageName(c), limitKrw = 50_000_000)
+        Coverage.JASANG -> CoverageTerm(c, coverageName(c), limitKrw = 100_000_000)
+        Coverage.JACHA -> CoverageTerm(c, coverageName(c), deductible = policy.jachaDeductible?.let {
+            "자기부담금은 손해액의 ${it.ratePct}%, 최소 ${CostEstimator.approx(it.minKrw)} 최대 ${CostEstimator.approx(it.maxKrw)}"
+        } ?: "자기부담금 조건 미등록")
+        Coverage.MUBOHEOM -> CoverageTerm(c, coverageName(c), limitKrw = 200_000_000)
+        Coverage.EMERGENCY_TOW -> CoverageTerm(c, coverageName(c), deductible = "무료 거리를 넘으면 km당 2,500원")
+        Coverage.EV_BATTERY_NEW_VALUE -> CoverageTerm(c, coverageName(c))
+        Coverage.EV_TOW_SOS -> CoverageTerm(c, coverageName(c))
+        Coverage.REMOTE_RETURN -> CoverageTerm(c, coverageName(c))
+        Coverage.TRANSPORT_COST -> CoverageTerm(c, coverageName(c))
+        Coverage.LEGAL_COST -> CoverageTerm(c, coverageName(c))
+        Coverage.OTHER_CAR -> CoverageTerm(c, coverageName(c))
     }
 
     override suspend fun getPolicy() = PolicyInfo(
@@ -120,7 +127,11 @@ class MockInsurerApi(
         terms = policy.coverages.sortedBy { it.ordinal }.map(::term),
         freeTowKm = policy.freeTowKm,
         emergencyServicesLeftThisYear = 5,
-        note = "시연용 보험사 응답입니다. 금액은 예시이며 실제 약관과 다를 수 있습니다.",
+        note = "가입 정보는 사용자가 등록한 값이에요. 견인 접수·사고 접수는 시연용 응답이에요.",
+        productName = policy.productName,
+        vehicleUse = policy.vehicleUse.statName,
+        carClass = policy.carClass.statName,
+        propertySurchargeThresholdKrw = policy.propertySurchargeThresholdKrw,
     )
 
     override suspend fun checkCoverage(req: CoverageRequest): CoverageCheck {
@@ -143,7 +154,7 @@ class MockInsurerApi(
             IncidentType.SINGLE_VEHICLE, IncidentType.BREAKDOWN, IncidentType.EV_BATTERY_DAMAGE -> Unit
         }
         if (req.ownCarDamaged && req.incidentType != IncidentType.BREAKDOWN) {
-            add(Coverage.JACHA, "내 차 수리. ${term(Coverage.JACHA).deductible}이에요.")
+            add(Coverage.JACHA, "내 차 수리. ${term(Coverage.JACHA).deductible}.")
             need(Coverage.JACHA, "내 차 수리비")
         }
         if (req.anyoneInjured) {
@@ -197,4 +208,22 @@ class MockInsurerApi(
             return 2 * 6371.0 * asin(sqrt(a))
         }
     }
+}
+
+/** 담보의 한국어 이름. 등록 화면과 보험사 응답에서 같은 이름을 쓴다 */
+fun coverageName(c: Coverage): String = when (c) {
+    Coverage.DAEIN_1 -> "대인배상 I"
+    Coverage.DAEIN_2 -> "대인배상 II"
+    Coverage.DAEMUL -> "대물배상"
+    Coverage.JASIN -> "자기신체사고"
+    Coverage.JASANG -> "자동차상해"
+    Coverage.JACHA -> "자기차량손해"
+    Coverage.MUBOHEOM -> "무보험차상해"
+    Coverage.EMERGENCY_TOW -> "긴급출동 견인"
+    Coverage.EV_BATTERY_NEW_VALUE -> "배터리 신가 보상"
+    Coverage.EV_TOW_SOS -> "전기차 긴급출동"
+    Coverage.REMOTE_RETURN -> "원격지 귀가"
+    Coverage.TRANSPORT_COST -> "대체 교통비"
+    Coverage.LEGAL_COST -> "법률 비용"
+    Coverage.OTHER_CAR -> "다른 차 운전"
 }

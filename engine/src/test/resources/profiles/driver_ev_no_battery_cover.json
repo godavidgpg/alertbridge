@@ -21,6 +21,16 @@
       "valueKrw": 20000000,
       "deliveryEpochMs": -63115200000,
       "usefulLifeYears": 15
-    }
+    },
+    "productName": "개인용 자동차보험 (예시 상품)",
+    "vehicleUse": "PERSONAL",
+    "carClass": "MID",
+    "daemulLimitKrw": 1000000000,
+    "jachaDeductible": {
+      "ratePct": 20,
+      "minKrw": 200000,
+      "maxKrw": 500000
+    },
+    "propertySurchargeThresholdKrw": 2000000
   }
 }
