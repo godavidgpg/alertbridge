@@ -84,7 +84,7 @@ fun PolicySheet(initial: InsurancePolicy?, isDemo: Boolean, canDelete: Boolean, 
     var towKm by remember { mutableStateOf(initial?.freeTowKm ?: 40) }
     var showError by remember { mutableStateOf(false) }
 
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), sheetMaxWidth = com.alertbridge.app.ui.theme.SheetMaxWidth) { com.alertbridge.app.ui.theme.Scaled {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.l).padding(bottom = Space.l).imePadding().navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(Space.l),
@@ -164,7 +164,7 @@ fun PolicySheet(initial: InsurancePolicy?, isDemo: Boolean, canDelete: Boolean, 
                 Text(stringResource(R.string.pol_delete), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-    }
+    } }
 }
 
 @Composable

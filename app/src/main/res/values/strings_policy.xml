@@ -34,6 +34,8 @@
 
     <string name="idle_insurance_edit">보험 등록하기</string>
     <string name="pol_edit">내 보험 수정</string>
+    <string name="pol_stop_first">보험 등록·수정은 차를 세운 뒤 할 수 있어요.</string>
+    <string name="pol_body_short">등록하면 사고 때 본인 부담금까지 계산해 드려요.</string>
     <string name="idle_insurance_value">%1$s · %2$s</string>
     <string name="idle_insurance_scenario">시나리오 보험 사용 중</string>
 

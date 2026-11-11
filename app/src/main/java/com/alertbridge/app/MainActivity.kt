@@ -81,22 +81,61 @@ class MainActivity : ComponentActivity() {
         if (m.isNotEmpty()) permissions.launch(m.toTypedArray())
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        startScenarioFrom(intent)
+    }
+
+    /**
+     * 디버그 빌드 전용: adb로 시나리오를 바로 재생한다. 시연 준비와 스크린샷용이다.
+     * Pleos에서는 am start가 앱을 뒤로 보내므로 브로드캐스트를 쓴다.
+     * adb shell am broadcast -a com.alertbridge.app.DEBUG_SCENARIO --es scenario S03   (live = 실시간)
+     */
+    private val debugReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) = startScenarioFrom(intent)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (BuildConfig.DEBUG) androidx.core.content.ContextCompat.registerReceiver(
+            this, debugReceiver, android.content.IntentFilter("com.alertbridge.app.DEBUG_SCENARIO"), androidx.core.content.ContextCompat.RECEIVER_EXPORTED,
+        )
+    }
+
+    override fun onStop() {
+        if (BuildConfig.DEBUG) runCatching { unregisterReceiver(debugReceiver) }
+        super.onStop()
+    }
+
+    private fun startScenarioFrom(intent: android.content.Intent?) {
+        if (!BuildConfig.DEBUG) return
+        val id = intent?.getStringExtra("scenario") ?: return
+        if (id == "live") { vm.startLive(); return }
+        vm.scenarios.firstOrNull { it.id.startsWith(id) }?.let(vm::start)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) requestIfNeeded()
+        if (savedInstanceState == null) startScenarioFrom(intent)
         val onLive = {
             vm.startLive()
             requestIfNeeded()
         }
+        // 차량 화면 전용 앱이다. 차량용 Android(Pleos 등)에서는 Pleos 글자·터치 기준에 맞게 배율을 올린다.
+        val scale = if (packageManager.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) com.alertbridge.app.ui.theme.CAR_SCALE else 1f
         setContent {
-            AlertBridgeTheme {
+            AlertBridgeTheme(scale = scale) {
                 val s by vm.state.collectAsStateWithLifecycle()
-                var tab by rememberSaveable { mutableIntStateOf(0) }
+                var tabChoice by rememberSaveable { mutableIntStateOf(0) }
+                // 주행 중 제한 상태에서는 로직 뷰를 열지 않는다.
+                val tab = if (s.drivingRestricted) 0 else tabChoice
+                val setTab: (Int) -> Unit = { tabChoice = it }
                 var sourceSheet by rememberSaveable { mutableStateOf(false) }
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-                        TopBar(s, tab, { tab = it }, onSource = { sourceSheet = true })
+                        TopBar(s, tab, setTab, onSource = { sourceSheet = true })
                         if (tab == 1) ScenarioControls(s, vm, onLive)
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         val body = Modifier.fillMaxWidth().weight(1f)
@@ -131,7 +170,7 @@ private fun TopBar(s: UiState, tab: Int, onTab: (Int) -> Unit, onSource: () -> U
             }
         }
         // 개발·시연용 전환이라 출시 빌드에서는 숨긴다.
-        if (BuildConfig.DEBUG) SingleChoiceSegmentedButtonRow {
+        if (BuildConfig.DEBUG && !s.drivingRestricted) SingleChoiceSegmentedButtonRow {
             listOf(R.string.tab_driver, R.string.tab_logic).forEachIndexed { i, label ->
                 SegmentedButton(
                     selected = tab == i, onClick = { onTab(i) },
@@ -150,7 +189,7 @@ private fun TopBar(s: UiState, tab: Int, onTab: (Int) -> Unit, onSource: () -> U
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SourceSheet(s: UiState, vm: AppViewModel, onLive: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), sheetMaxWidth = com.alertbridge.app.ui.theme.SheetMaxWidth) { com.alertbridge.app.ui.theme.Scaled {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.xl)) {
             Text(stringResource(R.string.demo_sheet_title), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = Space.l))
             Text(stringResource(R.string.demo_sheet_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = Space.l, vertical = Space.s))
@@ -159,7 +198,7 @@ private fun SourceSheet(s: UiState, vm: AppViewModel, onLive: () -> Unit, onClos
                 SourceRow(sc.description, sc.id.take(3), selected = s.scenario?.id == sc.id) { vm.start(sc); onClose() }
             }
         }
-    }
+    } }
 }
 
 @Composable

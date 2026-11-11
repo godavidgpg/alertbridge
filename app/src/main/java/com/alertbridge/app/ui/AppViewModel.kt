@@ -102,6 +102,8 @@ data class UiState(
     val pendingApproval: ActionRequest? = null,
     /** 가입할 때 등록한 내 보험. 실시간 모드에서 쓴다 (시나리오는 시나리오의 프로필을 쓴다) */
     val myPolicy: InsurancePolicy? = null,
+    /** 차량의 주행 중 UX 제한. 참이면 입력이 많은 화면을 막는다 */
+    val drivingRestricted: Boolean = false,
 )
 
 /**
@@ -137,6 +139,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var advisedSession: Long? = null
 
     private val policyStore = PolicyStore(app)
+    private val restriction = com.alertbridge.app.platform.DrivingRestriction(app)
 
     /** 공공 손해 통계. 키가 없으면 앱에 내장한 통계를 쓴다. 한 번 받으면 앱이 켜져 있는 동안 다시 받지 않는다 */
     private val claimStats: ClaimStats =
@@ -146,6 +149,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         _state.update { it.copy(myPolicy = policyStore.load()) }
+        viewModelScope.launch { restriction.restricted.collect { r -> _state.update { it.copy(drivingRestricted = r) } } }
         startLive()
     }
 
@@ -178,6 +182,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
+        restriction.release()
         job?.cancel()
         tts.shutdown()
     }
@@ -215,7 +220,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val eng = AlertBridgeEngine.withDefaultPolicy()
         engine = eng
         source = src
-        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps, driver = driver, myPolicy = it.myPolicy) }
+        _state.update { UiState(scenario = s, speed = it.speed, autoAnswers = it.autoAnswers, useRealGps = it.useRealGps, driver = driver, myPolicy = it.myPolicy, drivingRestricted = it.drivingRestricted) }
         job = viewModelScope.launch {
             val caps = src.capabilities()
             eng.configure(caps, driver, s?.vehicle)

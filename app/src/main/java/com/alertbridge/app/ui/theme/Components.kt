@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,7 +51,7 @@ fun PrimaryAction(
 ) {
     val sem = AB.semantic
     val colors = when (tone) {
-        Tone.Danger -> ButtonDefaults.buttonColors(containerColor = sem.danger, contentColor = sem.onDanger)
+        Tone.Danger -> ButtonDefaults.buttonColors(containerColor = sem.dangerStrong, contentColor = sem.onDangerStrong)
         Tone.Neutral -> ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurface, contentColor = MaterialTheme.colorScheme.surface)
         Tone.Primary -> ButtonDefaults.buttonColors()
     }
@@ -131,5 +132,23 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier, trailing: @Composa
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         trailing?.invoke()
+    }
+}
+
+/**
+ * 차량 화면의 가로 2단. 왼쪽은 지금 할 일과 큰 버튼, 오른쪽은 참고 정보.
+ * 운전자 쪽(왼쪽)에 주 행동을 둬 손이 덜 가게 한다.
+ */
+@Composable
+fun CarPanes(
+    modifier: Modifier = Modifier,
+    leftWeight: Float = 1f,
+    rightWeight: Float = 1f,
+    left: @Composable ColumnScope.() -> Unit,
+    right: @Composable ColumnScope.() -> Unit,
+) {
+    Row(modifier.padding(Space.xl), horizontalArrangement = Arrangement.spacedBy(Space.xxl)) {
+        Column(Modifier.weight(leftWeight).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.l), content = left)
+        Column(Modifier.weight(rightWeight).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Space.l), content = right)
     }
 }

@@ -2,6 +2,7 @@ package com.alertbridge.app.adapter
 
 import ai.pleos.playground.vehicle.Vehicle
 import android.content.Context
+import android.util.Log
 import android.content.pm.PackageManager
 import android.car.Car
 import android.car.VehiclePropertyIds
@@ -15,6 +16,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * 여러 입력(GPS, 차속, Pleos 차량)을 하나로 묶는다.
@@ -70,23 +74,40 @@ class CarSpeedSource(private val context: Context) : SignalSource {
             awaitClose { }
             return@callbackFlow
         }
-        val car = Car.createCar(context)
-        val manager = car.getCarManager(Car.PROPERTY_SERVICE) as CarPropertyManager
         val callback = object : CarPropertyManager.CarPropertyEventCallback {
             override fun onChangeEvent(value: CarPropertyValue<*>) {
                 (value.value as? Float)?.let { trySend(VehicleEvent(nowMs(), Signal.VehicleSpeed(metersPerSecondToKmh(it)))) }
             }
             override fun onErrorEvent(propertyId: Int, areaId: Int) = Unit // 오류를 0km/h로 바꾸지 않는다.
         }
-        manager.registerCallback(callback, VehiclePropertyIds.PERF_VEHICLE_SPEED, CarPropertyManager.SENSOR_RATE_FAST)
+        var manager: CarPropertyManager? = null
+        var car: Car? = null
+        // 연결·구독은 차량 서비스 전용 스레드에서 한다. 메인 스레드에서 하면 서비스가 느릴 때 ANR이 난다.
+        // 붙지 못하면 차속은 계속 "알 수 없음"이고, 0km/h로 바꾸지 않는다.
+        if (android.os.Build.VERSION.SDK_INT >= 30) com.alertbridge.app.platform.CarThread.post {
+            car = Car.createCar(context, com.alertbridge.app.platform.CarThread.handler, Car.CAR_WAIT_TIMEOUT_DO_NOT_WAIT) { c, ready ->
+                if (!ready) return@createCar
+                // android.car는 이 콜백을 항상 메인 스레드로 보낸다. 바인더 호출은 다시 전용 스레드로 넘긴다.
+                com.alertbridge.app.platform.CarThread.post {
+                    runCatching {
+                        val m = c.getCarManager(Car.PROPERTY_SERVICE) as CarPropertyManager
+                        m.registerCallback(callback, VehiclePropertyIds.PERF_VEHICLE_SPEED, CarPropertyManager.SENSOR_RATE_FAST)
+                        manager = m
+                    }.onFailure { Log.w(TAG, "차속 구독 실패", it) }
+                }
+            }
+        }
         awaitClose {
-            manager.unregisterCallback(callback)
-            car.disconnect()
+            com.alertbridge.app.platform.CarThread.post {
+                runCatching { manager?.unregisterCallback(callback) }
+                runCatching { car?.disconnect() }
+            }
         }
     }
 
     companion object {
         const val SPEED_PERMISSION = "android.car.permission.CAR_SPEED"
+        private const val TAG = "CarSpeedSource"
         fun metersPerSecondToKmh(v: Float): Float = v * 3.6f
     }
 }
@@ -95,18 +116,34 @@ class CarSpeedSource(private val context: Context) : SignalSource {
  * 실제 Pleos 차량 서비스에 붙는다. 서비스 앱이 설치된 기기에서만 만든다.
  * TODO(VERIFY): Vehicle.initialize()가 비동기로 서비스에 붙는지 실차에서 확인. 붙기 전 check 호출은 오류(null)로 처리된다.
  */
-class PleosLiveSource private constructor(private val vehicle: Vehicle) : SignalSource {
-    private val adapter = PleosSignalSource(PleosVehicleApis.from(vehicle))
+class PleosLiveSource private constructor(private val context: Context) : SignalSource {
+    // SDK 초기화·조회·등록은 모두 Pleos 서비스와의 바인더 호출이다. 서비스가 느리거나 재시작 중이면 오래 막히므로
+    // 메인 스레드에서 하지 않는다 (Pleos 에뮬레이터에서 메인 스레드 호출로 ANR이 나는 것을 확인).
+    private val lock = Any()
+    private var vehicle: Vehicle? = null
+    private var adapter: PleosSignalSource? = null
 
-    override suspend fun capabilities(): CapabilityMap = adapter.capabilities()
+    /** 처음 쓸 때 IO 스레드에서 연결한다. 실패하면 null이고, 차량 신호 없이 계속한다. */
+    private fun connect(): PleosSignalSource? = synchronized(lock) {
+        adapter ?: runCatching {
+            val v = Vehicle(context).also { it.initialize() }
+            vehicle = v
+            PleosSignalSource(PleosVehicleApis.from(v)).also { adapter = it }
+        }.onFailure { Log.w("PleosLiveSource", "Pleos 차량 서비스 연결 실패", it) }.getOrNull()
+    }
+
+    override suspend fun capabilities(): CapabilityMap =
+        withContext(Dispatchers.IO) { connect()?.capabilities() } ?: CapabilityMap()
 
     override fun events(): Flow<VehicleEvent> = callbackFlow {
-        val unregister = adapter.register { trySend(it) }
+        val unregister = connect()?.register { trySend(it) }
         awaitClose {
-            unregister()
-            vehicle.release()
+            kotlin.concurrent.thread(name = "pleos-release", isDaemon = true) {
+                runCatching { unregister?.invoke() }
+                runCatching { synchronized(lock) { vehicle?.release(); vehicle = null; adapter = null } }
+            }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     override fun nowMs(): Long = System.currentTimeMillis()
 
@@ -120,13 +157,8 @@ class PleosLiveSource private constructor(private val vehicle: Vehicle) : Signal
             false
         }
 
-        fun tryCreate(context: Context): PleosLiveSource? {
-            if (!isServiceInstalled(context)) return null
-            return try {
-                PleosLiveSource(Vehicle(context).also { it.initialize() })
-            } catch (_: RuntimeException) {
-                null // 서비스 버전이 맞지 않는 등. 차량 신호 없이 계속한다.
-            }
-        }
+        /** 서비스 앱이 설치돼 있으면 만든다. 실제 연결은 [capabilities]·[events]에서 IO 스레드로 한다. */
+        fun tryCreate(context: Context): PleosLiveSource? =
+            if (isServiceInstalled(context)) PleosLiveSource(context.applicationContext) else null
     }
 }

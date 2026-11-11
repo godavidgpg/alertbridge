@@ -60,6 +60,7 @@ import com.alertbridge.app.ui.AppViewModel
 import com.alertbridge.app.ui.UiState
 import com.alertbridge.app.ui.questionRes
 import com.alertbridge.app.ui.theme.AB
+import com.alertbridge.app.ui.theme.CarPanes
 import com.alertbridge.app.ui.theme.IconBadge
 import com.alertbridge.app.ui.theme.InfoRow
 import com.alertbridge.app.ui.theme.PrimaryAction
@@ -74,6 +75,7 @@ import com.alertbridge.engine.model.Action
 import com.alertbridge.engine.model.ActionId
 import com.alertbridge.engine.model.ActionKind
 import com.alertbridge.engine.model.ActionStatus
+import com.alertbridge.engine.model.CapabilityKey
 import com.alertbridge.engine.model.Answer
 import com.alertbridge.engine.model.Confidence
 import com.alertbridge.engine.model.DamageProfile
@@ -136,64 +138,151 @@ internal fun BigOutlined(text: String, onClick: () -> Unit, modifier: Modifier =
 @Composable
 private fun Idle(r: EngineResult?, s: UiState, vm: AppViewModel) {
     var policySheet by rememberSaveable { mutableStateOf(false) }
-    if (policySheet) {
+    // 주행 중에는 입력이 많은 보험 등록을 열지 않는다.
+    if (policySheet && !s.drivingRestricted) {
         val initial = s.myPolicy ?: vm.demoPolicy()
         com.alertbridge.app.ui.policy.PolicySheet(
             initial, isDemo = s.myPolicy == null, canDelete = s.myPolicy != null,
             onSave = vm::savePolicy, onClose = { policySheet = false },
         )
     }
-    Column(Modifier.fillMaxSize().padding(Space.l)) {
+    val openPolicy = { policySheet = true }
+    // 센서 감시가 주인공이다. 직접 신고는 센서가 놓쳤을 때의 예비 수단이라 작게 둔다.
+    CarPanes(Modifier.fillMaxSize(), leftWeight = 1.15f, rightWeight = 1f, left = {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.l)) {
-            Spacer(Modifier.height(Space.s))
-            IconBadge(Icons.Filled.CheckCircle, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, size = 56.dp)
-            Text(stringResource(R.string.d_idle_title), style = MaterialTheme.typography.headlineMedium)
-            val note = when (r?.session?.state) {
-                SessionState.DISMISSED -> R.string.d_idle_dismissed
-                SessionState.CLOSED -> R.string.d_idle_closed
-                else -> R.string.d_idle_body
-            }
-            Text(stringResource(note), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            SectionCard {
-                val loc = s.inputs.lastOrNull { it.event.signal is com.alertbridge.engine.model.Signal.Location }?.event?.signal as? com.alertbridge.engine.model.Signal.Location
-                InfoRow(stringResource(R.string.idle_location), loc?.let { it.roadName ?: it.address ?: "%.4f, %.4f".format(it.lat, it.lng) } ?: stringResource(R.string.idle_location_wait))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                val vehicle = when {
-                    s.scenario != null -> stringResource(R.string.idle_vehicle_demo)
-                    s.liveInputs.size > 1 -> stringResource(R.string.idle_vehicle_live, s.liveInputs.drop(1).joinToString(", "))
-                    else -> stringResource(R.string.idle_vehicle_none)
-                }
-                InfoRow(stringResource(R.string.idle_vehicle), vehicle)
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                val ins = s.driver?.insurance
-                InfoRow(
-                    stringResource(R.string.idle_insurance),
-                    when {
-                        s.scenario != null -> stringResource(R.string.idle_insurance_scenario)
-                        s.myPolicy != null -> stringResource(R.string.idle_insurance_value, s.myPolicy.insurer, com.alertbridge.app.ui.policy.classLabel(s.myPolicy.carClass))
-                        else -> ins?.insurer?.let { "$it (예시)" } ?: stringResource(R.string.idle_insurance_none)
-                    },
-                )
-            }
-            if (s.scenario == null && s.myPolicy != null) {
-                androidx.compose.material3.TextButton({ policySheet = true }) { Text(stringResource(R.string.pol_edit)) }
-            }
-            // 처음 쓰는 사람에게 보험 등록을 권한다. 등록하지 않아도 예시 보험으로 동작한다.
-            if (s.scenario == null && s.myPolicy == null) {
-                SectionCard(container = MaterialTheme.colorScheme.secondaryContainer, border = Color.Transparent) {
-                    Text(stringResource(R.string.pol_title), style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(R.string.pol_body), style = MaterialTheme.typography.bodyMedium)
-                    SecondaryAction(stringResource(R.string.idle_insurance_edit), { policySheet = true }, Modifier.fillMaxWidth())
-                }
+            IdleStatus(r)
+            SensorPanel(s)
+        }
+        ReportButton(vm)
+    }, right = {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.l)) {
+            IdleInfo(s)
+            InsurancePrompt(s, openPolicy)
+        }
+    })
+}
+
+/** 감시 중인 센서. 엔진이 사고 근거로 쓰는 신호를 역할별로 묶어 지원 여부를 그대로 보여 준다. */
+@Composable
+private fun SensorPanel(s: UiState) {
+    val caps = s.capabilities
+    fun state(vararg keys: CapabilityKey): Boolean? = when {
+        keys.any { caps.supported[it] == true } -> true
+        keys.all { caps.supported[it] == false } -> false
+        else -> null
+    }
+    val rows = listOf(
+        Triple(R.string.sensor_airbag, R.string.sensor_airbag_role, state(CapabilityKey.SEAT_AIRBAG_DEPLOYED)),
+        Triple(R.string.sensor_speed, R.string.sensor_speed_role, state(CapabilityKey.VEHICLE_SPEED)),
+        Triple(R.string.sensor_hazard, R.string.sensor_hazard_role, state(CapabilityKey.HAZARD_STATE, CapabilityKey.TURN_SIGNAL)),
+        Triple(R.string.sensor_location, R.string.sensor_location_role, state(CapabilityKey.LOCATION)),
+        Triple(R.string.sensor_warning, R.string.sensor_warning_role, state(CapabilityKey.TELLTALES, CapabilityKey.LOW_TIRE_PRESSURE, CapabilityKey.POWER_DOWN_WARNING)),
+        Triple(R.string.sensor_seat, R.string.sensor_seat_role, state(CapabilityKey.SEAT_OCCUPANCY, CapabilityKey.SEAT_BELT_BUCKLED)),
+    )
+    SectionCard {
+        SectionTitle(stringResource(R.string.sensor_title))
+        rows.chunked(2).forEach { pair ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
+                pair.forEach { (name, role, on) -> SensorTile(stringResource(name), stringResource(role), on, Modifier.weight(1f)) }
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
             }
         }
-        Spacer(Modifier.height(Space.l))
-        PrimaryAction(stringResource(R.string.d_manual), { vm.userAction { UserActionEvent.ManualReport(it) } }, tone = Tone.Danger, icon = Icons.Filled.Warning, height = 72.dp)
-        Text(
-            stringResource(R.string.idle_hint), Modifier.fillMaxWidth().padding(top = Space.s),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+        Text(stringResource(R.string.sensor_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun SensorTile(name: String, role: String, on: Boolean?, modifier: Modifier) {
+    val sem = AB.semantic
+    val (fg, bg, label) = when (on) {
+        true -> Triple(sem.success, sem.successContainer, stringResource(R.string.sensor_on))
+        null -> Triple(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant, stringResource(R.string.sensor_unknown))
+        false -> Triple(MaterialTheme.colorScheme.onSurfaceVariant, Color.Transparent, stringResource(R.string.sensor_off))
+    }
+    Row(
+        modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.medium).padding(Space.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(10.dp).background(if (on == true) sem.success else MaterialTheme.colorScheme.outline, CircleShape))
+        Spacer(Modifier.width(Space.m))
+        Column(Modifier.weight(1f)) {
+            Text(name, style = MaterialTheme.typography.titleMedium)
+            Text(role, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        StatusPill(label, fg, bg)
+    }
+}
+
+@Composable
+private fun IdleStatus(r: EngineResult?) {
+    IconBadge(Icons.Filled.CheckCircle, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer, size = 56.dp)
+    Text(stringResource(R.string.d_idle_title), style = MaterialTheme.typography.headlineMedium)
+    val note = when (r?.session?.state) {
+        SessionState.DISMISSED -> R.string.d_idle_dismissed
+        SessionState.CLOSED -> R.string.d_idle_closed
+        else -> R.string.d_idle_body
+    }
+    Text(stringResource(note), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@Composable
+private fun IdleInfo(s: UiState) {
+    SectionCard {
+        val loc = s.inputs.lastOrNull { it.event.signal is com.alertbridge.engine.model.Signal.Location }?.event?.signal as? com.alertbridge.engine.model.Signal.Location
+        InfoRow(stringResource(R.string.idle_location), loc?.let { it.roadName ?: it.address ?: "%.4f, %.4f".format(it.lat, it.lng) } ?: stringResource(R.string.idle_location_wait))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        val vehicle = when {
+            s.scenario != null -> stringResource(R.string.idle_vehicle_demo)
+            s.liveInputs.size > 1 -> stringResource(R.string.idle_vehicle_live, s.liveInputs.drop(1).joinToString(", "))
+            else -> stringResource(R.string.idle_vehicle_none)
+        }
+        InfoRow(stringResource(R.string.idle_vehicle), vehicle)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        val ins = s.driver?.insurance
+        InfoRow(
+            stringResource(R.string.idle_insurance),
+            when {
+                s.scenario != null -> stringResource(R.string.idle_insurance_scenario)
+                s.myPolicy != null -> stringResource(R.string.idle_insurance_value, s.myPolicy.insurer, com.alertbridge.app.ui.policy.classLabel(s.myPolicy.carClass))
+                else -> ins?.insurer?.let { "$it (예시)" } ?: stringResource(R.string.idle_insurance_none)
+            },
         )
     }
+}
+
+/** 보험 등록 안내. 등록하지 않아도 예시 보험으로 동작한다. 주행 중에는 정차 후 하라고만 알린다. */
+@Composable
+private fun InsurancePrompt(s: UiState, open: () -> Unit) {
+    if (s.scenario != null) return
+    when {
+        s.drivingRestricted -> Text(stringResource(R.string.pol_stop_first), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        s.myPolicy != null -> SecondaryAction(stringResource(R.string.pol_edit), open, Modifier.fillMaxWidth())
+        else -> SectionCard(container = MaterialTheme.colorScheme.secondaryContainer, border = Color.Transparent) {
+            Text(stringResource(R.string.pol_title), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.pol_body_short), style = MaterialTheme.typography.bodyMedium)
+            SecondaryAction(stringResource(R.string.idle_insurance_edit), open, Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+private fun ReportButton(vm: AppViewModel) {
+    // 예비 수단. 빨간 테두리 보조 버튼으로 두되, 위급할 때 찾기 쉽게 터치 영역은 크게 유지한다.
+    androidx.compose.material3.OutlinedButton(
+        { vm.userAction { UserActionEvent.ManualReport(it) } },
+        Modifier.fillMaxWidth().defaultMinSize(minHeight = TouchMin),
+        shape = MaterialTheme.shapes.large,
+        border = androidx.compose.foundation.BorderStroke(2.dp, AB.semantic.danger),
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = AB.semantic.danger),
+    ) {
+        Icon(Icons.Filled.Warning, null)
+        Spacer(Modifier.width(Space.s))
+        Text(stringResource(R.string.d_manual), style = MaterialTheme.typography.titleLarge)
+    }
+    Text(
+        stringResource(R.string.idle_hint), Modifier.fillMaxWidth(),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -240,21 +329,23 @@ private fun CountdownRing(seconds: Int, total: Int, color: Color) {
 @Composable
 private fun Confirm(r: EngineResult, s: UiState, vm: AppViewModel) {
     val sem = AB.semantic
-    Column(Modifier.fillMaxSize().background(sem.dangerContainer.copy(alpha = 0.55f)).padding(Space.l)) {
-        EvacuateBanner(r)
-        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-            secondsLeft(r, s.nowMs)?.let { CountdownRing(it, 30, sem.danger) }
-            Spacer(Modifier.height(Space.xl))
-            Text(stringResource(R.string.question_IS_ACCIDENT), style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
-            secondsLeft(r, s.nowMs)?.let {
-                Spacer(Modifier.height(Space.s))
-                Text(stringResource(R.string.d_countdown_confirm, it), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-            }
+    val prompt: @Composable () -> Unit = {
+        secondsLeft(r, s.nowMs)?.let { CountdownRing(it, 30, sem.danger) }
+        Spacer(Modifier.height(Space.xl))
+        Text(stringResource(R.string.question_IS_ACCIDENT), style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
+        secondsLeft(r, s.nowMs)?.let {
+            Spacer(Modifier.height(Space.s))
+            Text(stringResource(R.string.d_countdown_confirm, it), color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
-        PrimaryAction(stringResource(R.string.d_confirm_yes), { vm.answer(TriageQ.IS_ACCIDENT, Answer.YES) }, tone = Tone.Danger, height = 96.dp)
-        Spacer(Modifier.height(Space.m))
-        SecondaryAction(stringResource(R.string.d_confirm_no), { vm.answer(TriageQ.IS_ACCIDENT, Answer.NO) }, Modifier.fillMaxWidth(), height = 96.dp, large = true)
     }
+    val yes: @Composable () -> Unit = { PrimaryAction(stringResource(R.string.d_confirm_yes), { vm.answer(TriageQ.IS_ACCIDENT, Answer.YES) }, tone = Tone.Danger, height = 96.dp) }
+    val no: @Composable () -> Unit = { SecondaryAction(stringResource(R.string.d_confirm_no), { vm.answer(TriageQ.IS_ACCIDENT, Answer.NO) }, Modifier.fillMaxWidth(), height = 96.dp, large = true) }
+    CarPanes(Modifier.fillMaxSize().background(sem.dangerContainer.copy(alpha = 0.55f)), left = {
+        EvacuateBanner(r)
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) { prompt() }
+    }, right = {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.xl, Alignment.CenterVertically)) { yes(); no() }
+    })
 }
 
 // ② 트리아지
@@ -264,42 +355,44 @@ private fun Triage(r: EngineResult, s: UiState, vm: AppViewModel, slow: Boolean)
     var ready by remember(q) { mutableStateOf(!slow) }
     // 초보·고령 모드는 질문 사이 간격을 둔다. 앞 질문 버튼을 잘못 누르는 것도 막는다.
     LaunchedEffect(q) { if (slow) { delay(1200); ready = true } }
-    Column(Modifier.fillMaxSize().padding(Space.l)) {
-        EvacuateBanner(r)
-        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Center) {
-            Text(stringResource(R.string.plan_question), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(Space.s))
-            Text(stringResource(questionRes(q)), style = MaterialTheme.typography.displaySmall)
-            secondsLeft(r, s.nowMs)?.let {
-                Spacer(Modifier.height(Space.m))
-                Text(stringResource(R.string.d_countdown, it), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        // "예"가 위험을 뜻할 때도, 안전을 뜻할 때도 있어 의미 색을 쓰지 않는다.
-        PrimaryAction(stringResource(R.string.answer_yes), { vm.answer(q, Answer.YES) }, tone = Tone.Neutral, enabled = ready, height = 80.dp)
-        Spacer(Modifier.height(Space.m))
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.m)) {
-            SecondaryAction(stringResource(R.string.answer_no), { vm.answer(q, Answer.NO) }, Modifier.weight(1f), enabled = ready, height = 80.dp, large = true)
-            SecondaryAction(stringResource(R.string.answer_unsure), { vm.answer(q, Answer.UNSURE) }, Modifier.weight(1f), enabled = ready, height = 80.dp)
+    val question: @Composable () -> Unit = {
+        Text(stringResource(R.string.plan_question), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(Space.s))
+        Text(stringResource(questionRes(q)), style = MaterialTheme.typography.displaySmall)
+        secondsLeft(r, s.nowMs)?.let {
+            Spacer(Modifier.height(Space.m))
+            Text(stringResource(R.string.d_countdown, it), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+    // "예"가 위험을 뜻할 때도, 안전을 뜻할 때도 있어 의미 색을 쓰지 않는다.
+    val yes: @Composable () -> Unit = { PrimaryAction(stringResource(R.string.answer_yes), { vm.answer(q, Answer.YES) }, tone = Tone.Neutral, enabled = ready, height = 80.dp) }
+    // 차량: 세 답을 같은 크기로 오른쪽에 세로로 둔다.
+    CarPanes(Modifier.fillMaxSize(), left = {
+        EvacuateBanner(r)
+        Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Center) { question() }
+    }, right = {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Space.l, Alignment.CenterVertically)) {
+            yes()
+            SecondaryAction(stringResource(R.string.answer_no), { vm.answer(q, Answer.NO) }, Modifier.fillMaxWidth(), enabled = ready, height = 80.dp, large = true)
+            SecondaryAction(stringResource(R.string.answer_unsure), { vm.answer(q, Answer.UNSURE) }, Modifier.fillMaxWidth(), enabled = ready, height = 80.dp, large = true)
+        }
+    })
 }
 
 // ③ 대응 계획
 @Composable
 private fun Plan(r: EngineResult, s: UiState, vm: AppViewModel, onConnect: (Action) -> Unit, onOpenCard: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Space.l),
-        verticalArrangement = Arrangement.spacedBy(Space.l),
-    ) {
+    val actions = r.plan.actions
+    val first: @Composable () -> Unit = {
         if (isNoResponse(r)) NoResponseBanner(r)
-        val actions = r.plan.actions
-        actions.firstOrNull()?.let { first ->
+        actions.firstOrNull()?.let { a ->
             Text(stringResource(R.string.plan_first), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            HeroAction(first, r, vm, { onConnect(first) }, onOpenCard)
+            HeroAction(a, r, vm, { onConnect(a) }, onOpenCard)
         }
         r.pendingQuestion?.let { InlineQuestion(it, r, vm) }
-        AiDecisionCard(s, vm)
+        if (actions.isEmpty()) Text(stringResource(R.string.d_no_actions))
+    }
+    val rest: @Composable () -> Unit = {
         if (actions.size > 1) {
             Text(stringResource(R.string.plan_rest), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             SectionCard(Modifier.padding(0.dp)) {
@@ -309,11 +402,24 @@ private fun Plan(r: EngineResult, s: UiState, vm: AppViewModel, onConnect: (Acti
                 }
             }
         }
-        if (actions.isEmpty()) Text(stringResource(R.string.d_no_actions))
+    }
+    val tail: @Composable () -> Unit = {
         VehicleCard(r.damage, vm)
         if (r.session.caseCard != null) SecondaryAction(stringResource(R.string.d_case_card), onOpenCard, Modifier.fillMaxWidth(), enabled = !r.vehicleMoving)
         SessionButtons(r, vm)
     }
+    // 차량: 왼쪽은 지금 할 일(1순위)과 차량 상태, 오른쪽은 보험 판단과 이어서 할 일. 각 단을 따로 스크롤한다.
+    CarPanes(Modifier.fillMaxSize(), leftWeight = 1f, rightWeight = 1.15f, left = {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.l)) {
+            first()
+            tail()
+        }
+    }, right = {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.l)) {
+            AiDecisionCard(s, vm)
+            rest()
+        }
+    })
 }
 
 @Composable

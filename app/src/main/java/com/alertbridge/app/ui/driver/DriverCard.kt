@@ -73,7 +73,7 @@ internal fun FinalConfirmDialog(a: Action, s: UiState, vm: AppViewModel, onClose
     val notify = a.kind == ActionKind.NOTIFY
     val number = a.contact?.number.orEmpty()
 
-    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) { com.alertbridge.app.ui.theme.Scaled {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().padding(16.dp)) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -132,7 +132,7 @@ internal fun FinalConfirmDialog(a: Action, s: UiState, vm: AppViewModel, onClose
                 }
             }
         }
-    }
+    } }
 }
 
 // ⑤ 사건 카드
@@ -150,16 +150,21 @@ internal fun CaseCardScreen(vm: AppViewModel, s: UiState, r: EngineResult, onBac
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(R.string.d_stop_first), style = MaterialTheme.typography.titleLarge) }
             return@Column
         }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).imePadding(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val place = card.location?.let { it.roadName ?: it.address } ?: stringResource(R.string.d_card_location_unknown)
-            Text(place, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Section(stringResource(R.string.d_card_receipt)) { Receipt(r, card, vm) }
-            Section(stringResource(R.string.d_card_signals)) { SignalGraph(card) }
-            Section(stringResource(R.string.d_card_history)) { History(card, r) }
-            Section(stringResource(R.string.d_card_photos)) { Photos(card, vm) }
-            Section(stringResource(R.string.d_card_qr)) { InfoQr(s) }
-            Text(stringResource(R.string.d_card_integrity, card.frozenEventCount), style = MaterialTheme.typography.bodySmall)
-            Text(card.frozenSha256, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // 가로 2단: 왼쪽은 지금 할 일(접수번호, 사진, 인적사항 QR), 오른쪽은 기록(신호, 처리 이력, 무결성).
+        Row(Modifier.weight(1f).imePadding(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                val place = card.location?.let { it.roadName ?: it.address } ?: stringResource(R.string.d_card_location_unknown)
+                Text(place, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Section(stringResource(R.string.d_card_receipt)) { Receipt(r, card, vm) }
+                Section(stringResource(R.string.d_card_photos)) { Photos(card, vm) }
+                Section(stringResource(R.string.d_card_qr)) { InfoQr(s) }
+            }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Section(stringResource(R.string.d_card_signals)) { SignalGraph(card) }
+                Section(stringResource(R.string.d_card_history)) { History(card, r) }
+                Text(stringResource(R.string.d_card_integrity, card.frozenEventCount), style = MaterialTheme.typography.bodySmall)
+                Text(card.frozenSha256, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }

@@ -42,6 +42,9 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 사고 직후에는 기어가 D인 채 멈춰 있는 경우가 많다. 주행 중 제한 상태에서도 쓸 수 있게 하고,
+                 제한 중에는 입력이 많은 화면을 앱이 직접 막는다 (DrivingRestriction). -->
+            <meta-data android:name="distractionOptimized" android:value="true" />
         </activity>
     </application>
 </manifest>

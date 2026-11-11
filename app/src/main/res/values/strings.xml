@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AlertBridge</string>
+    <string name="app_name">어떡car노</string>
 
     <string name="mode_live">실시간 GPS</string>
     <string name="live_description">실제 위치 API 입력. 차량 신호가 없어 "알 수 없음"이다. 더미 차량은 S01~S12에서 재생한다.</string>

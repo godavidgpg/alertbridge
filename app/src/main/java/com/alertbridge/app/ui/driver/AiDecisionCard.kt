@@ -160,7 +160,7 @@ private fun Decision(d: AdvisorDecision, vm: AppViewModel) {
 @Composable
 internal fun ApprovalSheet(req: ActionRequest, vm: AppViewModel) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = { vm.answerApproval(false) }, sheetState = state) {
+    ModalBottomSheet(onDismissRequest = { vm.answerApproval(false) }, sheetState = state, sheetMaxWidth = com.alertbridge.app.ui.theme.SheetMaxWidth) { com.alertbridge.app.ui.theme.Scaled {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = Space.l).padding(bottom = Space.l).navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(Space.m),
@@ -178,7 +178,7 @@ internal fun ApprovalSheet(req: ActionRequest, vm: AppViewModel) {
             PrimaryAction(stringResource(R.string.approve_yes), { vm.answerApproval(true) })
             SecondaryAction(stringResource(R.string.approve_no), { vm.answerApproval(false) }, Modifier.fillMaxWidth())
         }
-    }
+    } }
 }
 
 /** 등록한 보험 조건과 공공 손해 통계로 계산한 예상 비용. 금액은 모두 코드가 계산한 값이다 */
