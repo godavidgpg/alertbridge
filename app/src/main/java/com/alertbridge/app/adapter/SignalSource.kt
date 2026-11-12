@@ -17,7 +17,11 @@ interface SignalSource {
 }
 
 /** 시나리오 JSON을 가상 시계로 재생한다. 배속과 일시정지를 지원한다. */
-class FixtureSignalSource(private val scenario: Scenario) : SignalSource {
+class FixtureSignalSource(
+    private val scenario: Scenario,
+    private val realClockMs: () -> Long = { System.nanoTime() / 1_000_000 },
+    private val waitFrame: suspend () -> Unit = { delay(16L) },
+) : SignalSource {
     var speed: Float = 1f
     var paused: Boolean = false
 
@@ -28,31 +32,34 @@ class FixtureSignalSource(private val scenario: Scenario) : SignalSource {
     override fun nowMs(): Long = clockMs
 
     override fun events(): Flow<VehicleEvent> = flow {
-        lastRealMs = System.nanoTime() / 1_000_000
+        lastRealMs = realClockMs()
+        var skippedLeadIn = false
         for (e in scenario.events.sortedBy { it.tMs }) {
-            // 아무 일도 없는 긴 구간은 건너뛴다. 시각 값 자체는 그대로라 판단에 영향이 없다.
-            if (e.tMs - clockMs > IDLE_SKIP_MS) clockMs = e.tMs - IDLE_LEAD_MS
+            // 도입부의 첫 긴 대기만 줄인다. 이후 구간을 생략하면 질문·타임아웃을 건너뛴다.
+            if (!skippedLeadIn && e.tMs - clockMs > IDLE_SKIP_MS) {
+                clockMs = e.tMs - IDLE_LEAD_MS
+                skippedLeadIn = true
+            }
             while (clockMs < e.tMs) {
-                delay(FRAME_MS)
+                waitFrame()
                 advance()
             }
             emit(e)
         }
         // 신호가 끝나도 시계는 계속 간다. 무응답 타이머가 여기에 달려 있다.
         while (true) {
-            delay(FRAME_MS)
+            waitFrame()
             advance()
         }
     }
 
     private fun advance() {
-        val real = System.nanoTime() / 1_000_000
+        val real = realClockMs()
         if (!paused) clockMs += ((real - lastRealMs) * speed).toLong()
         lastRealMs = real
     }
 
     private companion object {
-        const val FRAME_MS = 16L
         const val IDLE_SKIP_MS = 5_000L
         const val IDLE_LEAD_MS = 3_000L
     }

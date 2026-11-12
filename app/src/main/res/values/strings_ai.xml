@@ -34,7 +34,7 @@
     <string name="ai_verdict_NOT_COVERED">보장 안 됨</string>
     <string name="ai_verdict_CHECK_NEEDED">확인 필요</string>
     <string name="ai_out_of_pocket">예상 본인 부담 %1$s</string>
-    <string name="ai_actions_taken">처리한 일</string>
+    <string name="ai_actions_taken">시연용 모의 접수 결과</string>
     <string name="ai_next_steps">보험 처리 순서</string>
     <string name="ai_rerun">다시 판단</string>
     <string name="ai_free_tow_title">무료 긴급견인 · %1$s</string>
@@ -56,4 +56,5 @@
     <string name="plan_rest">이어서 할 일</string>
     <string name="plan_vehicle">차량 상태</string>
     <string name="plan_question">하나만 더 여쭤볼게요</string>
+    <string name="ai_mock_notice">보험사 접수는 모의 연동입니다. 실제 견인·사고 접수는 이루어지지 않아요.</string>
 </resources>

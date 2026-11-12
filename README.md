@@ -301,7 +301,7 @@ adb shell am broadcast -a com.alertbridge.app.DEBUG_SCENARIO --es scenario live 
 
 ## 알려진 문제와 남은 일
 
-- **원인 불명 오류:** 질문 화면을 빠르게 넘길 때 부상 질문에 "예"가 기록된 일이 있었습니다(자동 탭 테스트에서 3번 중 2번). 사람이 누를 때도 생기는지, 원인이 무엇인지 아직 확인하지 못했습니다.
+- **이전 관찰 오류(대응 반영, 실기기 재검증 필요):** 질문 화면을 빠르게 넘길 때 부상 질문에 "예"가 기록된 일이 있었습니다(자동 탭 테스트에서 3번 중 2번). 사람이 누를 때도 생기는지, 원인이 무엇인지 아직 확인하지 못했습니다.
 - **차량 기능:**
   - 실차 연결 확인. 화면 장착 방향과 충격 임계값 보정, 좌석 점유 값 해석 확인
   - Pleos ADAS SDK로 주행 보조 경고 연결
@@ -323,3 +323,7 @@ adb shell am broadcast -a com.alertbridge.app.DEBUG_SCENARIO --es scenario live 
 - Pleos 차량 신호: `pleos.car.permission.CAR_SAFETY`·`CAR_SEATS`·`CAR_DOORS`·`CAR_LIGHTS`·`CAR_DRIVE`·`CAR_ENERGY`·`CAR_INFO`
 
 Pleos 퍼미션은 App Market과 협의·승인된 범위에서만 쓸 수 있습니다.
+
+## 제출용 재촬영
+
+질문 입력 보호·실시간 예시 보험 분리·모의 완료 기록 방지를 반영했습니다. 촬영 방법과 남은 검증 범위는 [demo-recording.md](docs/demo-recording.md)를 참고하세요.

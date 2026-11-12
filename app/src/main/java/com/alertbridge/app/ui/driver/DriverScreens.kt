@@ -176,7 +176,7 @@ private fun SensorPanel(s: UiState) {
         Triple(R.string.sensor_airbag, R.string.sensor_airbag_role, state(CapabilityKey.SEAT_AIRBAG_DEPLOYED)),
         Triple(R.string.sensor_speed, R.string.sensor_speed_role, state(CapabilityKey.VEHICLE_SPEED)),
         Triple(R.string.sensor_adas, R.string.sensor_adas_role, state(CapabilityKey.ADAS)),
-        Triple(R.string.sensor_hazard, R.string.sensor_hazard_role, state(CapabilityKey.HAZARD_STATE, CapabilityKey.TURN_SIGNAL)),
+        Triple(R.string.sensor_hazard, R.string.sensor_hazard_role, state(CapabilityKey.HAZARD_STATE)),
         Triple(R.string.sensor_location, R.string.sensor_location_role, state(CapabilityKey.LOCATION)),
         Triple(R.string.sensor_warning, R.string.sensor_warning_role, state(CapabilityKey.TELLTALES, CapabilityKey.LOW_TIRE_PRESSURE, CapabilityKey.POWER_DOWN_WARNING)),
         Triple(R.string.sensor_seat, R.string.sensor_seat_role, state(CapabilityKey.SEAT_OCCUPANCY, CapabilityKey.SEAT_BELT_BUCKLED)),
@@ -354,9 +354,9 @@ private fun Confirm(r: EngineResult, s: UiState, vm: AppViewModel) {
 @Composable
 private fun Triage(r: EngineResult, s: UiState, vm: AppViewModel, slow: Boolean) {
     val q = r.pendingQuestion ?: return
-    var ready by remember(q) { mutableStateOf(!slow) }
+    var ready by remember(q) { mutableStateOf(false) }
     // 초보·고령 모드는 질문 사이 간격을 둔다. 앞 질문 버튼을 잘못 누르는 것도 막는다.
-    LaunchedEffect(q) { if (slow) { delay(1200); ready = true } }
+    LaunchedEffect(q) { delay(if (slow) 1200 else 700); ready = true }
     val question: @Composable () -> Unit = {
         Text(stringResource(R.string.plan_question), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.height(Space.s))

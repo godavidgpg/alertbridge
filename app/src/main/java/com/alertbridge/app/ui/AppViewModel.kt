@@ -42,7 +42,6 @@ import com.alertbridge.agent.advisor.AdvisorDecision
 import com.alertbridge.agent.advisor.AdvisorProgress
 import com.alertbridge.agent.advisor.ClaudeAgentModel
 import com.alertbridge.agent.advisor.InsuranceAdvisor
-import com.alertbridge.agent.advisor.Tools
 import com.alertbridge.agent.insurance.CostService
 import com.alertbridge.agent.insurance.MockInsurerApi
 import com.alertbridge.agent.stats.ClaimStats
@@ -79,7 +78,7 @@ data class UiState(
     val scenario: Scenario? = null,
     val playing: Boolean = true,
     val speed: Float = 1f,
-    val autoAnswers: Boolean = true,
+    val autoAnswers: Boolean = false,
     val nowMs: Long = 0,
     val result: EngineResult? = null,
     val inputs: List<InputRow> = emptyList(),
@@ -90,6 +89,7 @@ data class UiState(
     val lastSpoken: String? = null,
     /** 전화 화면을 열지 못한 번호 */
     val dialFailedNumber: String? = null,
+    val guardianNotifyFailed: Boolean = false,
     val locationDenied: Boolean = false,
     /** 디버그 빌드에서 전화 앱 대신 기록만 한 번호 */
     val testModeDialed: String? = null,
@@ -130,6 +130,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var playback: FixtureSignalSource? = null
     private var job: Job? = null
     private var lastQuestion: TriageQ? = null
+    private val answerGate = AnswerGate()
     private var driver: OccupantProfile? = null
     private var vehicle: VehicleProfile? = null
 
@@ -188,6 +189,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     override fun onCleared() {
         restriction.release()
         job?.cancel()
+        advisorJob?.cancel()
+        approval?.complete(false)
         tts.shutdown()
     }
 
@@ -212,10 +215,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun run(src: SignalSource, s: Scenario?, beforeTick: (AlertBridgeEngine) -> Unit) {
         job?.cancel()
         lastQuestion = null
-        // 실시간 모드에는 프로필 선택 화면이 없어 데모 운전자를 쓴다.
-        val base = ScenarioJson.profile(readAsset(s?.profile ?: DEMO_PROFILE))
-        // 실시간 모드는 사용자가 등록한 보험을 쓴다. 등록하지 않았으면 데모 운전자의 보험을 쓴다.
-        val driver = if (s == null) _state.value.myPolicy?.let { base.copy(insurance = it) } ?: base else base
+        answerGate.reset()
+        // 실시간 모드에는 예시 보험·보호자·의료 정보를 넘기지 않는다.
+        val driver = if (s == null) OccupantProfile(
+            id = "live", name = "운전자", insurance = _state.value.myPolicy,
+        ) else ScenarioJson.profile(readAsset(s.profile ?: DEMO_PROFILE))
         this.driver = driver
         this.vehicle = s?.vehicle
         advisorJob?.cancel()
@@ -275,7 +279,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun now() = source?.nowMs() ?: 0
 
     fun answer(q: TriageQ, a: Answer) {
-        engine?.onTriage(TriageAnswer(q, a, now()))
+        val eng = engine ?: return
+        val time = now()
+        val pending = eng.currentResult(time)?.pendingQuestion
+        if (!answerGate.accept(q, pending, android.os.SystemClock.elapsedRealtime())) return
+        // 사람이 응답하기 시작하면 시나리오 자동 응답과 섞지 않는다.
+        setAutoAnswers(false)
+        eng.onTriage(TriageAnswer(q, a, time))
         refresh()
     }
 
@@ -296,18 +306,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * AI 보험 판단. 보험 조회·보장 판단은 바로 하고, 견인 요청·사고 접수는 사용자 승인 후에만 실행한다.
-     * 실행된 조치의 접수번호는 엔진에 접수번호로 넘겨 사건 기록에 남긴다.
+     * 현재 모의 보험사 결과는 화면에서만 보여 주고 실제 사건 접수 이력에 넣지 않는다.
      */
     fun runAdvisor() {
         val eng = engine ?: return
         val r = eng.currentResult(now()) ?: return
+        advisorJob?.cancel()
+        approval?.complete(false)
+        advisedSession = r.candidate.detectedMs
         val insurance = driver?.insurance ?: run {
             _state.update { it.copy(advisor = AdvisorUi.Unavailable) }
             return
         }
-        advisorJob?.cancel()
-        advisedSession = r.candidate.detectedMs
-        _state.update { it.copy(advisor = AdvisorUi.Running(null)) }
+        _state.update { it.copy(advisor = AdvisorUi.Running(null), pendingApproval = null) }
         val v = vehicle
         advisorJob = viewModelScope.launch {
             val decision = withContext(Dispatchers.IO) {
@@ -323,7 +334,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     },
                 )
             }
-            recordActions(decision)
+            // MockInsurerApi의 번호를 실제 사건 접수 완료로 기록하지 않는다.
             _state.update { it.copy(advisor = AdvisorUi.Done(decision), pendingApproval = null) }
         }
     }
@@ -342,29 +353,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         approval = null
     }
 
-    /** 보험사가 준 번호는 사람이 승인한 조치의 접수번호다. 엔진 기록에 남긴다. */
-    private fun recordActions(d: AdvisorDecision) {
-        val eng = engine ?: return
-        d.actionsTaken.forEach { a ->
-            val id = when (a.tool) {
-                Tools.REQUEST_TOW.name -> ActionId.CALL_INSURER_EMERGENCY
-                Tools.FILE_CLAIM.name -> ActionId.CALL_INSURER_CLAIM
-                else -> return@forEach
-            }
-            if (a.referenceNo.isBlank()) return@forEach
-            eng.onUserAction(UserActionEvent.ContactAttempted(id, now()))
-            eng.onUserAction(UserActionEvent.ReceiptNumberEntered(id, a.referenceNo, now()))
-        }
-        refresh()
-    }
-
     /** 신고 문장 읽어 주기 */
     fun speak(text: String) = tts.speak(text)
 
     fun notifyGuardian(action: Action) {
         val phone = action.contact?.number ?: return
-        guardian.notify(phone, action.reason.text)
-        userAction { UserActionEvent.GuardianNotified(it) }
+        val sent = guardian.notify(phone, action.reason.text)
+        _state.update { it.copy(guardianNotifyFailed = !sent) }
+        if (sent) {
+            userAction { UserActionEvent.GuardianNotified(it) }
+        } else {
+            speak("보호자 알림은 아직 연결되지 않았어요. 직접 연락해 주세요.")
+        }
     }
 
     private fun refresh() {
@@ -374,9 +374,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
         // 무응답 + 사전 동의일 때의 보호자 알림만 자동이다. 기관 연결은 여기로 오지 않는다.
         result?.plan?.actions?.firstOrNull { it.autoExecutable && it.status == ActionStatus.SUGGESTED }?.let { a ->
-            a.contact?.number?.let { guardian.notify(it, a.reason.text) }
-            eng.onUserAction(UserActionEvent.GuardianNotified(now))
-            result = eng.currentResult(now)
+            val sent = a.contact?.number?.let { guardian.notify(it, a.reason.text) } == true
+            if (sent) {
+                eng.onUserAction(UserActionEvent.GuardianNotified(now))
+                result = eng.currentResult(now)
+            }
         }
 
         val q = result?.pendingQuestion

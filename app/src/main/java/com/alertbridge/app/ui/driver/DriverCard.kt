@@ -119,6 +119,7 @@ internal fun FinalConfirmDialog(a: Action, s: UiState, vm: AppViewModel, onClose
                     }
                 } else {
                     val result = when {
+                        notify && s.guardianNotifyFailed -> stringResource(R.string.d_guardian_auto)
                         notify -> stringResource(R.string.d_guardian_sent_note)
                         s.dialFailedNumber == number -> stringResource(R.string.d_confirm_failed, number)
                         s.testModeDialed == number -> stringResource(R.string.d_confirm_test_mode)

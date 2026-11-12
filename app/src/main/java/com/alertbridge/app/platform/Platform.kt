@@ -26,7 +26,7 @@ interface Dialer {
 
 /** 보호자 알림. 기관 연락에는 쓰지 않는다. */
 interface GuardianNotifier {
-    fun notify(phone: String, message: String)
+    fun notify(phone: String, message: String): Boolean
 }
 
 class AndroidDialer(private val context: Context) : Dialer {
@@ -84,5 +84,8 @@ class FakeStt : Stt {
 }
 
 class FakeGuardianNotifier(private val onNotify: (String, String) -> Unit) : GuardianNotifier {
-    override fun notify(phone: String, message: String) = onNotify(phone, message)
+    override fun notify(phone: String, message: String): Boolean {
+        onNotify(phone, message)
+        return false // 기록용 구현은 전송 성공이 아니다.
+    }
 }
