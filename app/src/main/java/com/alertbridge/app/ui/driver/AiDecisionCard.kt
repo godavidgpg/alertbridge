@@ -78,7 +78,7 @@ internal fun AiDecisionCard(s: UiState, vm: AppViewModel) {
 
 @Composable
 private fun SourcePill(src: DecisionSource) {
-    // Claude가 판단했을 때만 출처를 붙인다. 규칙 기반 대체 판단은 운전자에게 따로 이름 붙이지 않는다.
+    // AI 응답과 규칙 기반 대체 판단을 구분해 시연 출처를 정확히 알린다.
     StatusPill(stringResource(if (src == DecisionSource.AI) R.string.ai_source_ai else R.string.ai_source_rules), MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
 }
 

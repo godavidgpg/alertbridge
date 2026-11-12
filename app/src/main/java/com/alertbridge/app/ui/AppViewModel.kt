@@ -306,7 +306,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * AI 보험 판단. 보험 조회·보장 판단은 바로 하고, 견인 요청·사고 접수는 사용자 승인 후에만 실행한다.
-     * 실행된 조치의 접수번호는 엔진에 접수번호로 넘겨 사건 기록에 남긴다.
+     * 현재 모의 보험사 결과는 화면에서만 보여 주고 실제 사건 접수 이력에 넣지 않는다.
      */
     fun runAdvisor() {
         val eng = engine ?: return
@@ -318,9 +318,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(advisor = AdvisorUi.Unavailable) }
             return
         }
-        advisorJob?.cancel()
-        advisedSession = r.candidate.detectedMs
-        _state.update { it.copy(advisor = AdvisorUi.Running(null)) }
+        _state.update { it.copy(advisor = AdvisorUi.Running(null), pendingApproval = null) }
         val v = vehicle
         advisorJob = viewModelScope.launch {
             val decision = withContext(Dispatchers.IO) {
