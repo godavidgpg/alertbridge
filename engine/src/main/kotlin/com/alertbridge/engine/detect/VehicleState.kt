@@ -56,6 +56,13 @@ class VehicleState(private val t: Thresholds, private val telltaleWarnings: Set<
     var evSoc: Float? = null; private set
     var lowBeamOn: Boolean? = null; private set
     var wiperActive: Boolean? = null; private set
+    /** 가장 최근 충격과 그 시각 */
+    var lastImpact: Signal.ImpactAccel? = null; private set
+    var lastImpactMs: Long? = null; private set
+    /** 주행 보조 경고가 켜진 시각 (종류별 마지막) */
+    val adasOnMs = mutableMapOf<com.alertbridge.engine.model.AdasKind, Long>()
+    /** 문이 마지막으로 열린 시각 */
+    var lastDoorOpenMs: Long? = null; private set
 
     private val episodes = mutableListOf<WarningEpisode>()
 
@@ -85,7 +92,9 @@ class VehicleState(private val t: Thresholds, private val telltaleWarnings: Set<
                     if (firstAirbagMs == null) firstAirbagMs = e.tMs
                 }
             }
-            is Signal.DoorPosition -> if (s.open) openDoors += s.door else openDoors -= s.door
+            is Signal.DoorPosition -> if (s.open) { openDoors += s.door; lastDoorOpenMs = e.tMs } else openDoors -= s.door
+            is Signal.ImpactAccel -> { lastImpact = s; lastImpactMs = e.tMs }
+            is Signal.AdasWarning -> if (s.active) adasOnMs[s.kind] = e.tMs
             is Signal.Location -> location = s
             is Signal.EvStateOfCharge -> evSoc = s.percent
             is Signal.LowBeamLight -> lowBeamOn = s.on

@@ -58,6 +58,10 @@ class CompositeSignalSource(
 class CarSpeedSource(private val context: Context) : SignalSource {
     val isAutomotive: Boolean get() = context.packageManager.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
 
+    /** 차량 서비스에서 차속을 한 번이라도 받았는가. 받지 못하면 GPS 속도로 대신한다 */
+    @Volatile var receiving: Boolean = false
+        private set
+
     private fun hasPermission() = context.checkSelfPermission(SPEED_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
     override suspend fun capabilities(): CapabilityMap = CapabilityMap(
@@ -76,7 +80,7 @@ class CarSpeedSource(private val context: Context) : SignalSource {
         }
         val callback = object : CarPropertyManager.CarPropertyEventCallback {
             override fun onChangeEvent(value: CarPropertyValue<*>) {
-                (value.value as? Float)?.let { trySend(VehicleEvent(nowMs(), Signal.VehicleSpeed(metersPerSecondToKmh(it)))) }
+                (value.value as? Float)?.let { receiving = true; trySend(VehicleEvent(nowMs(), Signal.VehicleSpeed(metersPerSecondToKmh(it)))) }
             }
             override fun onErrorEvent(propertyId: Int, areaId: Int) = Unit // 오류를 0km/h로 바꾸지 않는다.
         }

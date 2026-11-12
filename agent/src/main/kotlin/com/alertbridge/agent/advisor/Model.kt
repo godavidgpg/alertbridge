@@ -38,7 +38,21 @@ data class AdvisorDecision(
     val disclaimer: String = "최종 보상 여부는 약관과 보험사 판단에 따릅니다.",
     /** 등록한 보험 조건 + 공공 손해 통계로 코드가 계산한 예상 비용. 화면의 금액은 여기서만 나온다 */
     val costEstimate: com.alertbridge.agent.insurance.CostEstimate? = null,
+    /** 고속도로 무료 긴급견인 안내. 규칙 엔진이 대상이라고 볼 때만 코드가 넣는다 (AI가 만들지 않음) */
+    val publicFreeTow: PublicTow? = null,
 )
+
+/** 공공 무료 견인 (한국도로공사 긴급견인) */
+@Serializable
+data class PublicTow(val name: String, val phone: String, val note: String) {
+    companion object {
+        val EX_2504 = PublicTow(
+            name = "한국도로공사 긴급견인",
+            phone = "1588-2504",
+            note = "고속도로에서 멈춘 차를 가까운 안전지대(휴게소·졸음쉼터·나들목 밖)까지 무료로 옮겨 줘요. 대상 차량인지 전화로 확인하세요.",
+        )
+    }
+}
 
 /** AI가 실행하려는 조치. 사용자가 승인해야 실행된다. */
 @Serializable

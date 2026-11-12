@@ -112,7 +112,10 @@ class InvariantTest {
                 }
                 val r = engine.currentResult(now)
                 assertClean(r, caps, confirmed, "seed=$seed t=$now")
-                if (roadConfidence < Fixtures.policy.thresholds.roadTypeMinConfidence) {
+                // 도로 판정이 불확실하면 2504를 제안하지 않는다. 단, 운전자가 고속도로라고 답했고 주행 불가면 문의를 안내한다.
+                val userSaysExpressway = r != null && r.damage.drivable == com.alertbridge.engine.model.Tri.NO &&
+                    r.risk.grades.any { com.alertbridge.engine.model.ReasonCode.EXPRESSWAY_REPORTED_BY_USER in it.because }
+                if (roadConfidence < Fixtures.policy.thresholds.roadTypeMinConfidence && !userSaysExpressway) {
                     assertTrue(r?.plan?.find(ActionId.CALL_2504) == null, "seed=$seed t=$now 신뢰도 $roadConfidence 인데 2504 제안")
                 }
             }

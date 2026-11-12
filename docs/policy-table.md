@@ -29,6 +29,15 @@
 | `allow2504WhenSizeUnknown` | true |
 | `coordinateMaxAccuracyM` | 100.0 |
 | `scriptZoneMinConfidence` | HIGH |
+| `impactMinG` | 1.2 |
+| `impactHighG` | 2.5 |
+| `impactS2G` | 4.0 |
+| `impactCooldownMs` | 10000 |
+| `impactAxisRatio` | 1.5 |
+| `adasStopWindowMs` | 10000 |
+| `softStopDropKmh` | 15.0 |
+| `softStopWindowMs` | 4000 |
+| `stopDoorWindowMs` | 30000 |
 
 ## 트리거 (위가 우선)
 
@@ -36,9 +45,12 @@
 |---|---|
 | T_AIRBAG | CONFIRMED |
 | T_MANUAL | CONFIRMED |
+| T_IMPACT | HIGH |
 | T_HARD_STOP | HIGH |
+| T_ADAS_STOP | HIGH |
 | T_EXPRESSWAY_STOP | MEDIUM |
 | T_STOP_HAZARD | MEDIUM |
+| T_STOP_DOOR | LOW |
 | T_VEHICLE_WARNING | MEDIUM |
 
 ## 위험 등급 규칙 (한 줄이라도 맞으면 그 등급)

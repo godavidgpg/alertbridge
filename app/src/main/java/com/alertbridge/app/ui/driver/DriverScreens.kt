@@ -172,8 +172,10 @@ private fun SensorPanel(s: UiState) {
         else -> null
     }
     val rows = listOf(
+        Triple(R.string.sensor_impact, R.string.sensor_impact_role, state(CapabilityKey.IMPACT_SENSOR)),
         Triple(R.string.sensor_airbag, R.string.sensor_airbag_role, state(CapabilityKey.SEAT_AIRBAG_DEPLOYED)),
         Triple(R.string.sensor_speed, R.string.sensor_speed_role, state(CapabilityKey.VEHICLE_SPEED)),
+        Triple(R.string.sensor_adas, R.string.sensor_adas_role, state(CapabilityKey.ADAS)),
         Triple(R.string.sensor_hazard, R.string.sensor_hazard_role, state(CapabilityKey.HAZARD_STATE, CapabilityKey.TURN_SIGNAL)),
         Triple(R.string.sensor_location, R.string.sensor_location_role, state(CapabilityKey.LOCATION)),
         Triple(R.string.sensor_warning, R.string.sensor_warning_role, state(CapabilityKey.TELLTALES, CapabilityKey.LOW_TIRE_PRESSURE, CapabilityKey.POWER_DOWN_WARNING)),
@@ -584,7 +586,9 @@ private fun VehicleCard(d: DamageProfile, vm: AppViewModel) {
                 d.impactZones.forEach {
                     Text(stringResource(R.string.d_zone_line, vm.messages.text("zone.${it.zone}"), stringResource(confidenceRes(it.confidence))), style = MaterialTheme.typography.bodyMedium)
                 }
-                d.occupants.forEach { OccupantLine(it, vm.messages.text("seat.${it.seat}")) }
+                // 빈 좌석은 보여 주지 않는다. 운전석과 탑승 여부를 모르는 좌석만 보여 준다.
+                d.occupants.filter { it.occupied != false || it.seat == com.alertbridge.engine.model.SeatArea.ROW1_LEFT }
+                    .forEach { OccupantLine(it, vm.messages.text("seat.${it.seat}")) }
             }
         }
         Text(stringResource(R.string.d_estimate_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

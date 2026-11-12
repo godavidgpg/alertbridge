@@ -7,6 +7,7 @@ import com.alertbridge.app.R
 import com.alertbridge.app.adapter.DummyPleosSource
 import com.alertbridge.app.adapter.FixtureSignalSource
 import com.alertbridge.app.adapter.CarSpeedSource
+import com.alertbridge.app.adapter.ImpactSensorSource
 import com.alertbridge.app.adapter.CompositeSignalSource
 import com.alertbridge.app.adapter.LiveSignalSource
 import com.alertbridge.app.adapter.PleosLiveSource
@@ -168,16 +169,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 실제 위치 API로 시작한다. 차량 신호 없이도 수동 신고는 동작한다. */
     fun startLive() {
         val app = getApplication<Application>()
-        val gps = LiveSignalSource(app)
         val speed = CarSpeedSource(app)
+        // 차량 서비스 차속이 안 들어오면 GPS 속도로 대신한다 (Pleos Vehicle SDK에는 차속 API가 없다).
+        val gps = LiveSignalSource(app, gpsSpeedWhen = { !speed.receiving })
         val pleos = PleosLiveSource.tryCreate(app)
+        val impact = ImpactSensorSource(app)
         val inputs = listOfNotNull(
             app.getString(R.string.input_gps),
             app.getString(R.string.input_speed).takeIf { speed.isAutomotive },
             app.getString(R.string.input_pleos).takeIf { pleos != null },
+            app.getString(R.string.input_impact),
         )
         playback = null
-        run(CompositeSignalSource(listOfNotNull(gps, speed, pleos)), null) { _ -> }
+        run(CompositeSignalSource(listOfNotNull(gps, speed, pleos, impact)), null) { _ -> }
         _state.update { it.copy(locationDenied = !gps.hasPermission(), liveInputs = inputs) }
     }
 

@@ -37,6 +37,8 @@
     <string name="ai_actions_taken">처리한 일</string>
     <string name="ai_next_steps">보험 처리 순서</string>
     <string name="ai_rerun">다시 판단</string>
+    <string name="ai_free_tow_title">무료 긴급견인 · %1$s</string>
+    <string name="ai_free_tow_connect">대응 계획의 "긴급견인 문의"에서 바로 연결할 수 있어요.</string>
     <string name="ai_start">보험 판단 받기</string>
     <string name="ai_unavailable">등록된 보험 정보가 없어 판단할 수 없어요.</string>
     <string name="ai_idle_body">질문에 답하시면 보험으로 무엇을 할지 판단해 드려요.</string>

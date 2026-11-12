@@ -129,3 +129,11 @@ SDK 자체가 `ai.pleos.playground.service.vehicle.VEHICLE_BINDING`을 매니페
 **도로 종류·도로명·km 지점은 어느 SDK도 주지 않는다.** 그래서 `roadType`은 `UNKNOWN`이고, 엔진은 사용자에게 고속도로인지 묻는다. 2504 안내까지 쓰려면 별도 지도 데이터가 필요하다.
 
 현재 앱의 `LiveSignalSource`는 차량 서비스 없이도 동작하도록 Android `LocationManager` + `Geocoder`를 쓴다. 차량에서는 같은 `SignalSource` 뒤에서 `FusedLocation`과 `NaviHelper` 주소로 바꾸면 된다 (미구현, 실차·시뮬레이터 필요).
+
+
+## 9. Pleos 에뮬레이터에서 확인한 것 (2026-11-12)
+
+- **좌석 점유 값 해석 불일치 (TODO(VERIFY), Pleos 문의 필요):** SDK 2.3.2의 `getCurrentSeatOccupancy`/`registerSeatOccupancy`는 원본 값이 `1`일 때 `true`(탑승)로 바꾼다(`SeatImpl` 바이트코드 확인). Pleos Connect 에뮬레이터 VHAL은 Android 표준(`0`=모름, `1`=빈 좌석, `2`=탑승)대로 보내서, 빈 좌석이 모두 "탑승"으로 보인다. 실차가 어느 쪽을 따르는지 확인해야 한다. 앱은 SDK가 준 true/false만 받으므로 앱에서 고칠 수 없다.
+- **차속 API 없음:** Vehicle SDK에는 실제 차속 API가 없다(`DrivingMode`는 크루즈 목표 속도만). 차속은 Android 표준 `PERF_VEHICLE_SPEED`(권한 `CAR_SPEED`)를 쓰고, 받지 못하면 GPS 속도로 대신한다.
+- **충격·가속도 API 없음:** 충돌 관련 신호는 에어백 전개뿐이다. 접촉 사고 감지를 위해 차량 화면 기기의 가속도 센서(`ImpactSensorSource`)를 쓴다. 화면 장착 방향(기기 -Z = 차 앞, +X = 오른쪽)은 실차에서 확인해야 한다.
+- **ADAS 신호:** `PleosPropertyIds`에 `FORWARD_COLLISION_WARNING_STATE`, `AUTOMATIC_EMERGENCY_BRAKING_STATE`, `BLIND_SPOT_WARNING_STATE`, `AUTO_EMERGENCY_SIGNAL_LIGHTS_SWITCH` 등의 이름은 있으나 공개 Vehicle SDK에는 구독 함수가 없다. 에뮬레이터에 `ai.pleos.playground.service.adas` 서비스가 있으므로 ADAS SDK를 받으면 `Signal.AdasWarning`으로 넣는다(엔진·시나리오 S16은 준비됨).

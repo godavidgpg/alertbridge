@@ -52,7 +52,7 @@ class InsuranceAdvisor(
                     val d = ToolExecutor.parseDecision(submit.inputJson)
                         ?: return rules().copy(actionsTaken = taken, fallbackReason = "AI 판단 형식이 맞지 않아 규칙으로 판단했어요.")
                     val e = estimate ?: costs?.let { runCatching { it.estimate(RuleBasedAdvisor.costRequest(brief)) }.getOrNull() }
-                    return withCosts(d.copy(actionsTaken = taken), e)
+                    return withCosts(d.copy(actionsTaken = taken, publicFreeTow = PublicTow.EX_2504.takeIf { brief.freeTow2504 }), e)
                 }
                 if (turn.toolCalls.isEmpty()) {
                     return rules().copy(actionsTaken = taken, fallbackReason = "AI가 판단을 제출하지 않아 규칙으로 판단했어요.")
@@ -114,6 +114,7 @@ class InsuranceAdvisor(
             4. Finish by calling submit_decision exactly once.
 
             Ground rules:
+            - When the incident summary has freeTow2504=true, the car stopped on an expressway may qualify for the free emergency tow by Korea Expressway Corporation (1588-2504, to the nearest safe area). Tell the driver to check that first in tow_reason and next_steps, then the insurer's tow for the rest of the way.
             - Emergency services (112/119) are handled outside your tools by the rule engine with the driver's confirmation. When the incident is life-threatening, tell the driver in next_steps that the 119 step comes first; never suggest delaying it for insurance.
             - Base coverage judgments only on the policy and coverage data the tools return. If something is not in the data, mark it CHECK_NEEDED rather than guessing.
             - Do not recommend buying insurance or adding riders. For coverages the driver does not hold, say only that it needs checking.
@@ -151,7 +152,9 @@ object RuleBasedAdvisor {
         }
         val quote = if (tow != TowCall.NO) insurer.quoteTow(b.location?.lat, b.location?.lng, null) else null
         val towReason = when (tow) {
-            TowCall.YES -> "차가 움직이기 어려운 상태로 판단돼요." + (quote?.nearestPartnerShop?.let { " 가까운 곳은 $it(약 ${quote.distanceKm}km)이에요." } ?: "")
+            TowCall.YES -> "차가 움직이기 어려운 상태로 판단돼요." +
+                (if (b.freeTow2504) " 고속도로에서는 먼저 한국도로공사 긴급견인(1588-2504)에 문의하세요. 가까운 안전지대까지 무료예요." else "") +
+                (quote?.nearestPartnerShop?.let { " 보험사 견인으로 가까운 곳은 $it(약 ${quote.distanceKm}km)이에요." } ?: "")
             TowCall.NO -> "스스로 운전할 수 있다고 답하셨어요."
             TowCall.UNSURE -> "운전할 수 있는지 아직 알 수 없어요. 안전한 곳에서 확인해 주세요."
         }
@@ -159,12 +162,14 @@ object RuleBasedAdvisor {
             check.notHeld.map { CoverageVerdict(it.substringBefore(":"), Verdict.CHECK_NEEDED, it.substringAfter(": ")) }
         val steps = buildList {
             if (b.lifeThreatening) add("119 구조 요청을 먼저 해 주세요.")
+            if (tow == TowCall.YES && b.freeTow2504) add("고속도로 긴급견인(1588-2504)에 무료 견인 대상인지 문의하세요.")
             if (tow == TowCall.YES) add("보험사 긴급출동 견인을 부르세요.")
             if (check.items.any { it.coverage.name != "EMERGENCY_TOW" }) add("보험사에 사고를 접수하세요.")
             add("현장 사진을 찍어 두세요.")
         }
         val estimate = costs?.let { runCatching { it.estimate(costRequest(b)) }.getOrNull() }
         return withCosts(AdvisorDecision(
+            publicFreeTow = PublicTow.EX_2504.takeIf { b.freeTow2504 },
             source = DecisionSource.RULES,
             callTow = tow,
             towReason = towReason,

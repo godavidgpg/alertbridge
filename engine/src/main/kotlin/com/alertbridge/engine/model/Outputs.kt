@@ -11,7 +11,15 @@ data class Message(
     val sentences: List<String> = listOf(text),
 )
 
-@Serializable enum class TriggerId { T_MANUAL, T_AIRBAG, T_HARD_STOP, T_STOP_HAZARD, T_EXPRESSWAY_STOP, T_VEHICLE_WARNING }
+@Serializable enum class TriggerId {
+    T_MANUAL, T_AIRBAG, T_HARD_STOP, T_STOP_HAZARD, T_EXPRESSWAY_STOP, T_VEHICLE_WARNING,
+    /** 가속도 센서 충격. 브레이크와 무관하게 정차 중 추돌·저속 접촉을 잡는다 */
+    T_IMPACT,
+    /** 전방 충돌 경고·긴급제동·후측방 경고 직후 정차 */
+    T_ADAS_STOP,
+    /** 감속 정차 직후 차로 위에서 문 열림. 가장 약한 근거라 묻는 단계로만 쓴다 */
+    T_STOP_DOOR,
+}
 @Serializable enum class TriggerConfidence { CONFIRMED, HIGH, MEDIUM, LOW }
 @Serializable enum class IncidentKind { ACCIDENT_SUSPECTED, ACCIDENT, FAULT }
 
@@ -57,7 +65,11 @@ enum class ReasonCode(vararg caps: CapabilityKey) {
     OTHER_PARTY_SUSPICIOUS,
     PEDESTRIAN_OR_BICYCLE,
     ACCIDENT_MINOR,
-    EXPRESSWAY_REPORTED_BY_USER;
+    EXPRESSWAY_REPORTED_BY_USER,
+    IMPACT_DIRECTION(CapabilityKey.IMPACT_SENSOR),
+    IMPACT_STRONG(CapabilityKey.IMPACT_SENSOR),
+    ADAS_BEFORE_STOP(CapabilityKey.ADAS, CapabilityKey.VEHICLE_SPEED),
+    STOP_THEN_DOOR(CapabilityKey.DOOR_POSITION, CapabilityKey.VEHICLE_SPEED);
 
     val capabilities: List<CapabilityKey> = caps.toList()
 }

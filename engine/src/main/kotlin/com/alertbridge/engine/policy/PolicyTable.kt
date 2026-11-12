@@ -67,6 +67,23 @@ data class Thresholds(
     val coordinateMaxAccuracyM: Float,
     /** 신고 문장에 넣을 충격 위치의 최소 신뢰도 */
     val scriptZoneMinConfidence: com.alertbridge.engine.model.Confidence,
+    /** 충격으로 사고를 의심할 최소 수평 가속도(G). 급제동은 보통 1G를 넘지 않는다 */
+    val impactMinG: Float = 1.2f,
+    /** 이 이상이면 충격 트리거 신뢰도를 정책 기본값(HIGH)으로 둔다. 아래면 MEDIUM */
+    val impactHighG: Float = 2.5f,
+    /** 이 이상이면 심각도 S2 근거로 쓴다 */
+    val impactS2G: Float = 4.0f,
+    /** 같은 충돌의 여진을 다시 세지 않는 시간 */
+    val impactCooldownMs: Long = 10000,
+    /** 방향 판정: 한 축이 다른 축의 몇 배 이상이면 그 축 방향으로 본다. 아니면 모서리 */
+    val impactAxisRatio: Float = 1.5f,
+    /** 주행 보조 경고 후 이 시간 안에 정차하면 T_ADAS_STOP */
+    val adasStopWindowMs: Long = 10000,
+    /** T_STOP_DOOR: 정차 직전 이만큼 감속했으면 "감속 정차"로 본다 */
+    val softStopDropKmh: Float = 15.0f,
+    val softStopWindowMs: Long = 4000,
+    /** T_STOP_DOOR: 감속 정차 후 이 시간 안에 문이 열리면 */
+    val stopDoorWindowMs: Long = 30000,
 )
 
 @Serializable data class TriggerDef(val id: TriggerId, val confidence: TriggerConfidence)

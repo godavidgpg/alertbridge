@@ -64,7 +64,9 @@ fun invariantViolations(r: EngineResult, caps: CapabilityMap, confirmEventSeen: 
     }
 
     val roadConfident = r.session.caseCard?.location?.roadTypeConfidence
-    if (r.plan.find(ActionId.CALL_2504) != null) {
+    // 운전자가 고속도로라고 답했고 주행 불가면, 위치·도로 판정이 불확실해도 1588-2504 문의를 안내한다.
+    val userSaysExpressway = r.risk.grades.any { ReasonCode.EXPRESSWAY_REPORTED_BY_USER in it.because } && r.damage.drivable == Tri.NO
+    if (r.plan.find(ActionId.CALL_2504) != null && !userSaysExpressway) {
         if (!caps.isSupported(CapabilityKey.LOCATION)) add("위치 미지원인데 2504 제안")
         if (roadConfident != null && roadConfident < policy.thresholds.roadTypeMinConfidence) add("도로 신뢰도 부족인데 2504 제안")
     }

@@ -173,6 +173,8 @@ class MockInsurerApi(
         val free = policy.freeTowKm
         val (shop, km) = if (lat != null && lng != null) {
             shops.map { it to haversineKm(lat, lng, it.lat, it.lng) * ROAD_FACTOR }.minBy { it.second }
+                // 협력 정비소가 너무 멀면(해외 좌표, 에뮬레이터 기본 위치 등) 추천하지 않는다.
+                .takeIf { it.second <= MAX_SHOP_KM } ?: (null to null)
         } else null to null
         val distance = destinationKm ?: km
         val extra = if (distance != null && free != null) ((distance - free).coerceAtLeast(0.0) * EXTRA_PER_KM).roundToLong() else null
@@ -181,7 +183,11 @@ class MockInsurerApi(
             distanceKm = distance?.let { (it * 10).roundToLong() / 10.0 },
             freeTowKm = free,
             estimatedExtraKrw = extra,
-            note = if (distance == null) "위치를 알 수 없어 거리를 계산하지 못했어요." else "도로 거리는 직선거리의 1.3배로 추정한 예시 값이에요.",
+            note = when {
+                distance != null -> "도로 거리는 직선거리의 1.3배로 추정한 예시 값이에요."
+                lat != null && lng != null -> "가까운 협력 정비소를 찾지 못했어요. 보험사에 견인 목적지를 물어보세요."
+                else -> "위치를 알 수 없어 거리를 계산하지 못했어요."
+            },
         )
     }
 
@@ -200,6 +206,7 @@ class MockInsurerApi(
         val EMERGENCY_TOW = Coverage.EMERGENCY_TOW
         const val EXTRA_PER_KM = 2_500.0
         const val ROAD_FACTOR = 1.3
+        const val MAX_SHOP_KM = 150.0
 
         fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
             val dLat = Math.toRadians(lat2 - lat1)

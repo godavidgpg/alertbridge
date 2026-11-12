@@ -30,13 +30,26 @@ import kotlinx.coroutines.withContext
  *
  * 나머지 차량 신호는 PleosSignalSource 몫이라 capability를 넣지 않는다 (= 알 수 없음).
  */
-class LiveSignalSource(private val context: Context) : SignalSource {
+/**
+ * @param gpsSpeedWhen 참이면 GPS 속도도 차속으로 보낸다. 차량 서비스 차속이 들어오지 않을 때만 켠다
+ *   (두 차속이 섞이면 GPS 지연 때문에 급정거를 잘못 볼 수 있다).
+ */
+class LiveSignalSource(
+    private val context: Context,
+    private val gpsSpeedWhen: () -> Boolean = { false },
+) : SignalSource {
 
     fun hasPermission(): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    override suspend fun capabilities(): CapabilityMap = CapabilityMap(mapOf(CapabilityKey.LOCATION to hasPermission()))
+    override suspend fun capabilities(): CapabilityMap = CapabilityMap(
+        buildMap {
+            put(CapabilityKey.LOCATION, hasPermission())
+            // GPS 속도를 대신 쓸 수 있으면 차속을 "지원"으로 알린다. 아니면 말하지 않는다(다른 입력이 정한다).
+            if (hasPermission() && gpsSpeedWhen()) put(CapabilityKey.VEHICLE_SPEED, true)
+        }
+    )
 
     override fun nowMs(): Long = System.currentTimeMillis()
 
@@ -68,6 +81,7 @@ class LiveSignalSource(private val context: Context) : SignalSource {
 
         val listener = LocationListener { l ->
             send(l)
+            if (l.hasSpeed() && gpsSpeedWhen()) trySend(VehicleEvent(nowMs(), Signal.VehicleSpeed(l.speed * 3.6f)))
             // 역지오코딩은 네트워크를 쓰므로 100m 이상 움직였을 때만 다시 한다.
             if (geocodedAt?.let { it.distanceTo(l) < GEOCODE_MIN_MOVE_M } != true) {
                 geocodedAt = l

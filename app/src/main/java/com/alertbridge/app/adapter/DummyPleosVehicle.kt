@@ -249,7 +249,8 @@ class DummyPleosVehicle(
                 val v = if (s.active) WiperState.ON else WiperState.OFF
                 fire<WiperStateListener>("WiperState", WindowValue.FRONT_WINDSHIELD, v) { onWiperStateUpdated(v) }
             }
-            is Signal.VehicleSpeed, is Signal.Location -> auxSink(s)
+            // 차속·위치·충격(기기 가속도 센서)·주행 보조 경고(ADAS SDK)는 Pleos Vehicle API가 아니라 바로 전달한다.
+            is Signal.VehicleSpeed, is Signal.Location, is Signal.ImpactAccel, is Signal.AdasWarning -> auxSink(s)
         }
     }
 
@@ -281,6 +282,8 @@ class DummyPleosSource(
     private val aux = mapOf(
         CapabilityKey.VEHICLE_SPEED to scenario.capabilities[CapabilityKey.VEHICLE_SPEED],
         CapabilityKey.LOCATION to scenario.capabilities[CapabilityKey.LOCATION],
+        CapabilityKey.IMPACT_SENSOR to scenario.capabilities[CapabilityKey.IMPACT_SENSOR],
+        CapabilityKey.ADAS to scenario.capabilities[CapabilityKey.ADAS],
     )
     /** 재생 중인 이벤트의 기록 시각. 메인 스레드가 잠깐 멈춰도 시각이 밀려 판정이 달라지지 않게 한다. */
     private var replayingTms: Long? = null

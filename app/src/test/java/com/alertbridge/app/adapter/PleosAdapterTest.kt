@@ -48,6 +48,8 @@ class PleosAdapterTest {
         val aux = mapOf(
             CapabilityKey.VEHICLE_SPEED to s.capabilities[CapabilityKey.VEHICLE_SPEED],
             CapabilityKey.LOCATION to s.capabilities[CapabilityKey.LOCATION],
+            CapabilityKey.IMPACT_SENSOR to s.capabilities[CapabilityKey.IMPACT_SENSOR],
+            CapabilityKey.ADAS to s.capabilities[CapabilityKey.ADAS],
         )
         val source = PleosSignalSource(vehicle.apis, aux) { now }
         val engine = AlertBridgeEngine.withDefaultPolicy()
@@ -71,7 +73,7 @@ class PleosAdapterTest {
     }
 
     @Test
-    fun `시나리오 12개가 Pleos 형식을 거쳐도 기대 결과를 낸다`() {
+    fun `시나리오 17개가 Pleos 형식을 거쳐도 기대 결과를 낸다`() {
         val failures = scenarios().associate { s ->
             // SDK는 에어백 종류를 주지 않는다. S03은 측면(LEFT) 대신 "종류 구분 불가" 규칙(FRONT)이 된다.
             val expected: Expected = if (s.id.startsWith("S03")) s.expected.copy(impactZonesContain = listOf(Zone.FRONT)) else s.expected
@@ -79,7 +81,7 @@ class PleosAdapterTest {
             s.id to if (result == null) listOf("결과 없음") else expected.mismatches(result)
         }.filterValues { it.isNotEmpty() }
         assertTrue(failures.isEmpty(), failures.entries.joinToString("\n") { "${it.key}: ${it.value}" })
-        assertEquals(12, scenarios().size)
+        assertEquals(17, scenarios().size)
     }
 
     @Test

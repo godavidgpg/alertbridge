@@ -43,11 +43,14 @@ object DamageEstimator {
             evidence += EvidenceRef(it.onMs, it.kind.name, it.detail)
         }
         if (deltaVHigh) reasons += ReasonCode.DELTA_V_HIGH
+        val impactStrong = !c.isFault && (c.state.lastImpact?.peakG ?: 0f) >= c.policy.thresholds.impactS2G &&
+            c.capabilities.isSupported(CapabilityKey.IMPACT_SENSOR)
+        if (impactStrong) reasons += ReasonCode.IMPACT_STRONG
 
         val severity = when {
             c.isFault -> Severity.S0
             airbagDeployed -> Severity.S3
-            functional.isNotEmpty() || deltaVHigh -> Severity.S2
+            functional.isNotEmpty() || deltaVHigh || impactStrong -> Severity.S2
             c.isAccident -> Severity.S1
             else -> Severity.S0
         }
@@ -83,6 +86,11 @@ object DamageEstimator {
             found += ZoneEstimate(wheelZone(WheelArea.valueOf(w.detail)), Confidence.MEDIUM, listOf(ReasonCode.TIRE_LOW_NEW))
         }
 
+        impactZone(c)?.let { z ->
+            found += z
+            evidence += EvidenceRef(c.state.lastImpactMs ?: c.nowMs, "ImpactAccel", z.zone.name)
+        }
+
         preImpactSteer(c)?.let { (zone, reason) ->
             found += ZoneEstimate(zone, Confidence.LOW, listOf(reason))
             evidence += EvidenceRef(c.candidate.suspicionMs, "TurnSignalState+SteeringAngle", zone.name)
@@ -108,6 +116,35 @@ object DamageEstimator {
         null -> if (seat == SeatArea.ROW1_LEFT || seat == SeatArea.ROW1_RIGHT) {
             ZoneEstimate(Zone.FRONT, Confidence.MEDIUM, listOf(ReasonCode.AIRBAG_UNKNOWN_KIND))
         } else null
+    }
+
+    /**
+     * 충격 방향으로 부딪힌 곳을 추정한다. 차가 밀린 반대쪽이 부딪힌 곳이다.
+     * 한 축이 우세하면 앞·뒤·왼쪽·오른쪽, 비슷하면 모서리. 강한 충격은 HIGH, 아니면 MEDIUM.
+     */
+    private fun impactZone(c: IncidentContext): ZoneEstimate? {
+        if (!c.capabilities.isSupported(CapabilityKey.IMPACT_SENSOR)) return null
+        val t = c.policy.thresholds
+        val imp = c.state.lastImpact ?: return null
+        val at = c.state.lastImpactMs ?: return null
+        if (imp.peakG < t.impactMinG || at < c.candidate.suspicionMs - t.preImpactWindowMs) return null
+        val lon = imp.longitudinalG ?: return null
+        val lat = imp.lateralG ?: return null
+        val absLon = kotlin.math.abs(lon)
+        val absLat = kotlin.math.abs(lat)
+        // 앞으로 밀렸으면(lon>0) 뒤에서 받힘. 오른쪽으로 밀렸으면(lat>0) 왼쪽에서 받힘.
+        val longZone = if (lon > 0) Zone.REAR else Zone.FRONT
+        val latZone = if (lat > 0) Zone.LEFT else Zone.RIGHT
+        val zone = when {
+            absLon >= absLat * t.impactAxisRatio -> longZone
+            absLat >= absLon * t.impactAxisRatio -> latZone
+            longZone == Zone.FRONT && latZone == Zone.LEFT -> Zone.FRONT_LEFT
+            longZone == Zone.FRONT -> Zone.FRONT_RIGHT
+            latZone == Zone.LEFT -> Zone.REAR_LEFT
+            else -> Zone.REAR_RIGHT
+        }
+        val conf = if (imp.peakG >= t.impactHighG) Confidence.HIGH else Confidence.MEDIUM
+        return ZoneEstimate(zone, conf, listOf(ReasonCode.IMPACT_DIRECTION))
     }
 
     private fun wheelZone(w: WheelArea) = when (w) {

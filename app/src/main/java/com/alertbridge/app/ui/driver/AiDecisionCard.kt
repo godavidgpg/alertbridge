@@ -102,6 +102,17 @@ private fun Decision(d: AdvisorDecision, vm: AppViewModel) {
             Text(d.towReason, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+    // 고속도로 무료 긴급견인. 보험사 견인보다 먼저 확인할 곳이라 견인 판단 바로 아래에 둔다.
+    d.publicFreeTow?.let { t ->
+        SectionCard(container = sem.successContainer, border = androidx.compose.ui.graphics.Color.Transparent) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.ai_free_tow_title, t.name), style = MaterialTheme.typography.titleMedium, color = sem.success, modifier = Modifier.weight(1f))
+                StatusPill(t.phone, sem.success, MaterialTheme.colorScheme.surface)
+            }
+            Text(t.note, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.ai_free_tow_connect), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
     Text(d.summary, style = MaterialTheme.typography.bodyLarge)
 
     if (d.coverage.isNotEmpty()) {

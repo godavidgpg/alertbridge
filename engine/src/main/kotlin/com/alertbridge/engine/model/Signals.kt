@@ -43,6 +43,10 @@ enum class FluidKind { BRAKE_FLUID, ENGINE_OIL, TRANSMISSION_OIL }
 @Serializable
 enum class LevelState { NORMAL, LOW, CRITICALLY_LOW, HIGH, ERROR, UNKNOWN }
 
+/** 주행 보조(ADAS) 경고 종류. Pleos ADAS SDK의 FCW·AEB·BSW 상태를 어댑터가 변환한다. */
+@Serializable
+enum class AdasKind { FORWARD_COLLISION, EMERGENCY_BRAKING, BLIND_SPOT, LANE_DEPARTURE }
+
 @Serializable
 enum class RoadType { EXPRESSWAY_MAIN, EXPRESSWAY_SHOULDER, TUNNEL, URBAN, RURAL, PARKING, UNKNOWN }
 
@@ -111,6 +115,19 @@ sealed interface Signal {
     @Serializable @SerialName("WiperActive")
     data class WiperActive(val active: Boolean) : Signal
 
+    /**
+     * 차량 화면 기기의 가속도 센서로 잰 순간 충격(중력 제외, 수평 성분). 단위 G.
+     * [longitudinalG] 양수 = 차가 앞으로 밀림(뒤에서 받힘), 음수 = 뒤로 밀림(앞에서 부딪힘).
+     * [lateralG] 양수 = 오른쪽으로 밀림(왼쪽에서 받힘), 음수 = 왼쪽으로 밀림(오른쪽에서 받힘).
+     * 기기 장착 방향을 모르면 방향은 null이고 크기만 쓴다.
+     */
+    @Serializable @SerialName("ImpactAccel")
+    data class ImpactAccel(val peakG: Float, val longitudinalG: Float? = null, val lateralG: Float? = null) : Signal
+
+    /** 주행 보조 경고가 켜지거나 꺼짐. Pleos ADAS SDK (FORWARD_COLLISION_WARNING_STATE 등) */
+    @Serializable @SerialName("AdasWarning")
+    data class AdasWarning(val kind: AdasKind, val active: Boolean) : Signal
+
     /** FusedLocation + 지도 데이터. 판정이 불확실하면 UNKNOWN과 낮은 confidence를 넣는다. */
     @Serializable @SerialName("Location")
     data class Location(
@@ -131,6 +148,10 @@ enum class CapabilityKey {
     SEAT_AIRBAG_DEPLOYED, SEAT_OCCUPANCY, SEAT_BELT_BUCKLED, LOW_TIRE_PRESSURE, DOOR_POSITION,
     TURN_SIGNAL, HAZARD_STATE, BRAKE_PEDAL, STEERING_ANGLE, VEHICLE_SPEED, FLUID_LEVEL,
     POWER_DOWN_WARNING, TELLTALES, EV_SOC, LOW_BEAM, WIPER, LOCATION,
+    /** 차량 화면 기기의 가속도 센서 */
+    IMPACT_SENSOR,
+    /** 주행 보조 경고 (Pleos ADAS SDK) */
+    ADAS,
 }
 
 /**
@@ -148,6 +169,8 @@ data class CapabilityMap(val supported: Map<CapabilityKey, Boolean?> = emptyMap(
 
 /** 이 신호를 믿으려면 어떤 capability가 true여야 하는가. */
 fun Signal.requiredCapability(): CapabilityKey = when (this) {
+    is Signal.ImpactAccel -> CapabilityKey.IMPACT_SENSOR
+    is Signal.AdasWarning -> CapabilityKey.ADAS
     is Signal.SeatAirbagDeployed -> CapabilityKey.SEAT_AIRBAG_DEPLOYED
     is Signal.SeatOccupancy -> CapabilityKey.SEAT_OCCUPANCY
     is Signal.SeatBeltBuckled -> CapabilityKey.SEAT_BELT_BUCKLED

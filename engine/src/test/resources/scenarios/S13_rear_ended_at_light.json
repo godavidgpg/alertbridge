@@ -1,0 +1,266 @@
+{
+  "id": "S13_rear_ended_at_light",
+  "description": "신호 대기 중 뒤에서 추돌 (차는 멈춰 있음, 충격 2.8G)",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "UNKNOWN"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "IMPACT_SENSOR": true,
+    "LOW_TIRE_PRESSURE": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "HAZARD_STATE": false,
+    "FLUID_LEVEL": true,
+    "EV_SOC": false,
+    "LOW_BEAM": true,
+    "WIPER": true
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_RIGHT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_LEFT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": false
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5006,
+        "lng": 127.0364,
+        "accuracyM": 6,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "테헤란로",
+        "address": "서울특별시 강남구 테헤란로 152"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 42.0
+      }
+    },
+    {
+      "tMs": 5000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 20.0
+      }
+    },
+    {
+      "tMs": 8000,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 9000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 20000,
+      "signal": {
+        "type": "ImpactAccel",
+        "peakG": 2.8,
+        "longitudinalG": 2.7,
+        "lateralG": 0.3
+      }
+    },
+    {
+      "tMs": 36000,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": true
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 22000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 24500,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 27000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    },
+    {
+      "tMs": 29500,
+      "question": "DRIVABLE",
+      "answer": "YES"
+    },
+    {
+      "tMs": 32000,
+      "question": "OTHER_PARTY_FLED",
+      "answer": "NO"
+    },
+    {
+      "tMs": 34500,
+      "question": "OTHER_PARTY_SUSPICIOUS",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_IMPACT",
+    "severity": "S1",
+    "drivable": "YES",
+    "impactZonesContain": [
+      "REAR"
+    ],
+    "airbag": "NO",
+    "firstAction": "MOVE_TO_SAFETY",
+    "mustContainActions": [
+      "CALL_INSURER_CLAIM",
+      "TAKE_PHOTOS"
+    ],
+    "mustNotContainActions": [
+      "CALL_119"
+    ],
+    "hasCaseCard": true,
+    "photoCheck": false
+  }
+}

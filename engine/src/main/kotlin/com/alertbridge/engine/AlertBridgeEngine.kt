@@ -364,7 +364,7 @@ class AlertBridgeEngine(
 
     companion object {
         private val HASH_JSON = Json { encodeDefaults = true }
-        private val ACCIDENT_TRIGGERS = setOf(TriggerId.T_AIRBAG, TriggerId.T_MANUAL, TriggerId.T_HARD_STOP)
+        private val ACCIDENT_TRIGGERS = setOf(TriggerId.T_AIRBAG, TriggerId.T_MANUAL, TriggerId.T_HARD_STOP, TriggerId.T_IMPACT, TriggerId.T_ADAS_STOP)
         private val CANCELLABLE = setOf(SessionState.CREATED, SessionState.SAFETY_CHECK, SessionState.SUPPORT_SELECTED)
 
         fun withDefaultPolicy(): AlertBridgeEngine {

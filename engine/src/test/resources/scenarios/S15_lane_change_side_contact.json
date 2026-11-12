@@ -1,0 +1,304 @@
+{
+  "id": "S15_lane_change_side_contact",
+  "description": "차선 변경 중 오른쪽 측면 접촉, 급정거 없이 정차 (충격 1.9G)",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "UNKNOWN"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "IMPACT_SENSOR": true,
+    "LOW_TIRE_PRESSURE": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "HAZARD_STATE": false,
+    "FLUID_LEVEL": true,
+    "EV_SOC": false,
+    "LOW_BEAM": true,
+    "WIPER": true
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_RIGHT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_LEFT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": false
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.4979,
+        "lng": 127.0276,
+        "accuracyM": 6,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "강남대로",
+        "address": "서울특별시 서초구 강남대로 373"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 48.0
+      }
+    },
+    {
+      "tMs": 27000,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "RIGHT"
+      }
+    },
+    {
+      "tMs": 28500,
+      "signal": {
+        "type": "SteeringAngle",
+        "degrees": 9.0
+      }
+    },
+    {
+      "tMs": 29000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 46.0
+      }
+    },
+    {
+      "tMs": 30000,
+      "signal": {
+        "type": "ImpactAccel",
+        "peakG": 1.9,
+        "longitudinalG": -0.4,
+        "lateralG": -1.8
+      }
+    },
+    {
+      "tMs": 30300,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 31000,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 32000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 38.0
+      }
+    },
+    {
+      "tMs": 34000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 25.0
+      }
+    },
+    {
+      "tMs": 36000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 12.0
+      }
+    },
+    {
+      "tMs": 38000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 50000,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": true
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 33000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 35500,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 38000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    },
+    {
+      "tMs": 40500,
+      "question": "DRIVABLE",
+      "answer": "YES"
+    },
+    {
+      "tMs": 43000,
+      "question": "OTHER_PARTY_FLED",
+      "answer": "NO"
+    },
+    {
+      "tMs": 45500,
+      "question": "OTHER_PARTY_SUSPICIOUS",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_IMPACT",
+    "severity": "S1",
+    "impactZonesContain": [
+      "RIGHT"
+    ],
+    "mustContainActions": [
+      "CALL_INSURER_CLAIM",
+      "EXCHANGE_INFO_QR"
+    ],
+    "mustNotContainActions": [
+      "CALL_119"
+    ],
+    "hasCaseCard": true
+  }
+}

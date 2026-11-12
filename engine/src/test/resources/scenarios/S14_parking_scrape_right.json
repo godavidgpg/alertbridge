@@ -1,0 +1,253 @@
+{
+  "id": "S14_parking_scrape_right",
+  "description": "주차장 저속 이동 중 오른쪽 긁힘 (시속 8km, 충격 1.5G)",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "UNKNOWN"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "IMPACT_SENSOR": true,
+    "LOW_TIRE_PRESSURE": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "HAZARD_STATE": false,
+    "FLUID_LEVEL": true,
+    "EV_SOC": false,
+    "LOW_BEAM": true,
+    "WIPER": true
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_RIGHT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_LEFT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": false
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5006,
+        "lng": 127.0364,
+        "accuracyM": 6,
+        "roadType": "PARKING",
+        "roadTypeConfidence": 0.9,
+        "roadName": "코엑스 주차장",
+        "address": "서울특별시 강남구 영동대로 513"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 8.0
+      }
+    },
+    {
+      "tMs": 14000,
+      "signal": {
+        "type": "SteeringAngle",
+        "degrees": -12.0
+      }
+    },
+    {
+      "tMs": 15000,
+      "signal": {
+        "type": "ImpactAccel",
+        "peakG": 1.5,
+        "longitudinalG": -0.3,
+        "lateralG": -1.4
+      }
+    },
+    {
+      "tMs": 15500,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 16500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 19000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 21500,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 24000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    },
+    {
+      "tMs": 26500,
+      "question": "DRIVABLE",
+      "answer": "YES"
+    },
+    {
+      "tMs": 29000,
+      "question": "OTHER_PARTY_FLED",
+      "answer": "NO"
+    },
+    {
+      "tMs": 31500,
+      "question": "OTHER_PARTY_SUSPICIOUS",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_IMPACT",
+    "severity": "S1",
+    "impactZonesContain": [
+      "RIGHT"
+    ],
+    "mustContainActions": [
+      "CALL_INSURER_CLAIM"
+    ],
+    "mustNotContainActions": [
+      "CALL_119"
+    ],
+    "hasCaseCard": true
+  }
+}

@@ -22,14 +22,26 @@
     "batteryEstimateRangePct": 15,
     "allow2504WhenSizeUnknown": true,
     "coordinateMaxAccuracyM": 100.0,
-    "scriptZoneMinConfidence": "HIGH"
+    "scriptZoneMinConfidence": "HIGH",
+    "impactMinG": 1.2,
+    "impactHighG": 2.5,
+    "impactS2G": 4.0,
+    "impactCooldownMs": 10000,
+    "impactAxisRatio": 1.5,
+    "adasStopWindowMs": 10000,
+    "softStopDropKmh": 15.0,
+    "softStopWindowMs": 4000,
+    "stopDoorWindowMs": 30000
   },
   "triggers": [
     { "id": "T_AIRBAG", "confidence": "CONFIRMED" },
     { "id": "T_MANUAL", "confidence": "CONFIRMED" },
+    { "id": "T_IMPACT", "confidence": "HIGH" },
     { "id": "T_HARD_STOP", "confidence": "HIGH" },
+    { "id": "T_ADAS_STOP", "confidence": "HIGH" },
     { "id": "T_EXPRESSWAY_STOP", "confidence": "MEDIUM" },
     { "id": "T_STOP_HAZARD", "confidence": "MEDIUM" },
+    { "id": "T_STOP_DOOR", "confidence": "LOW" },
     { "id": "T_VEHICLE_WARNING", "confidence": "MEDIUM" }
   ],
   "expresswayRoadTypes": ["EXPRESSWAY_MAIN", "EXPRESSWAY_SHOULDER", "TUNNEL"],

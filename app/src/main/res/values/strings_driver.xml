@@ -5,7 +5,7 @@
 
     <!-- 대기 -->
     <string name="d_idle_title">센서가 사고를 지켜보고 있어요</string>
-    <string name="d_idle_body">충돌, 급정거, 에어백 전개를 감지하면 바로 여쭤볼게요.</string>
+    <string name="d_idle_body">충격, 급정거, 에어백 전개, 충돌 경고를 감지하면 바로 여쭤볼게요.</string>
     <string name="d_confirm_yes">네, 사고예요</string>
     <string name="d_confirm_no">아니에요, 괜찮아요</string>
     <string name="d_mock_insurer">가입 정보는 등록하신 내용이에요. 견인 요청·사고 접수는 시연용 보험사로 보내요.</string>
@@ -122,6 +122,10 @@
     <string name="sensor_warning_role">차량 이상</string>
     <string name="sensor_seat">좌석·안전벨트</string>
     <string name="sensor_seat_role">탑승자 상태</string>
+    <string name="sensor_impact">충격(가속도)</string>
+    <string name="sensor_impact_role">추돌·접촉 감지</string>
+    <string name="sensor_adas">주행 보조 경고</string>
+    <string name="sensor_adas_role">충돌 경고·긴급제동</string>
     <string name="sensor_on">감시 중</string>
     <string name="sensor_unknown">알 수 없음</string>
     <string name="sensor_off">미지원</string>

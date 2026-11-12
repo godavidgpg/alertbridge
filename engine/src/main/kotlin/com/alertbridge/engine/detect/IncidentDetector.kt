@@ -31,6 +31,11 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
     private var hardStopFired = false
     private var stopHazardFired = false
     private var expresswayFired = false
+    private var adasStopFired = false
+    private var stopDoorFired = false
+    private var lastImpactHitMs: Long? = null
+    /** 감속 정차의 시작 시각 (softStopDropKmh 이상 감속이 시작된 때) */
+    private var softDropMs: Long? = null
 
     /** 최근 급감속이 시작된 시각. 수동 신고의 충돌 의심 시점으로 쓴다. */
     var lastDropSuspicionMs: Long? = null
@@ -47,8 +52,11 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
             prune(e.tMs)
         }
         if (s is Signal.VehicleSpeed) hardStop(e.tMs, s.kmh)?.let { hits += it }
+        if (s is Signal.ImpactAccel) impact(e.tMs, s)?.let { hits += it }
         stopHazard(e.tMs)?.let { hits += it }
         expressway(e.tMs)?.let { hits += it }
+        adasStop(e.tMs)?.let { hits += it }
+        stopDoor(e.tMs)?.let { hits += it }
         if (newWarning != null) hits += DetectionHit(TriggerId.T_VEHICLE_WARNING, e.tMs, e.tMs)
         return hits
     }
@@ -59,6 +67,9 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
         hardStopFired = true
         stopHazardFired = true
         expresswayFired = true
+        adasStopFired = true
+        stopDoorFired = true
+        lastImpactHitMs = Long.MAX_VALUE / 2
     }
 
     private fun prune(now: Long) {
@@ -72,6 +83,9 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
             hardStopFired = false
             stopHazardFired = false
             expresswayFired = false
+            adasStopFired = false
+            stopDoorFired = false
+            if (lastImpactHitMs == Long.MAX_VALUE / 2) lastImpactHitMs = null
         }
         val windowStart = now - t.hardStopWindowMs
         // 구간 시작 직전 샘플도 값이 유지된 것으로 본다 (sample-and-hold).
@@ -82,6 +96,11 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
         prune(now)
 
         val peak = inWindow.maxByOrNull { it.value }
+        // 약한 감속(T_STOP_DOOR용)은 별도 창으로 본다.
+        val softStart = now - t.softStopWindowMs
+        val softPeak = speeds.filter { it.tMs >= softStart }.maxOfOrNull { it.value }
+        if (softPeak != null && softPeak - kmh >= t.softStopDropKmh && softDropMs == null) softDropMs = now
+        if (kmh >= t.movingSpeedKmh && (softPeak == null || softPeak - kmh < t.softStopDropKmh)) softDropMs = null
         if (peak != null && peak.value - kmh >= t.hardStopDropKmh) {
             val last = inWindow.last { it.value == peak.value }
             val suspicion = maxOf(last.tMs, windowStart)
@@ -131,5 +150,45 @@ class IncidentDetector(private val policy: PolicyTable, private val state: Vehic
         if (state.openDoors.isEmpty() && state.hazardOnMs == null) return null
         expresswayFired = true
         return DetectionHit(TriggerId.T_EXPRESSWAY_STOP, now, stoppedAt)
+    }
+
+    /**
+     * 가속도 센서 충격. 정차 중 추돌이나 저속 접촉처럼 브레이크와 무관한 사고를 잡는다.
+     * 약한 충격은 신뢰도를 낮춰 "사고가 났나요?"로 묻기만 한다.
+     */
+    private fun impact(now: Long, s: Signal.ImpactAccel): DetectionHit? {
+        if (!capabilities.isSupported(CapabilityKey.IMPACT_SENSOR)) return null
+        if (s.peakG < t.impactMinG) return null
+        val last = lastImpactHitMs
+        if (last != null && now - last < t.impactCooldownMs) return null
+        lastImpactHitMs = now
+        lastDropSuspicionMs = now
+        val confidence = if (s.peakG >= t.impactHighG) null else TriggerConfidence.MEDIUM
+        return DetectionHit(TriggerId.T_IMPACT, now, now, confidence)
+    }
+
+    /** 전방 충돌 경고·긴급제동·후측방 경고가 켜진 뒤 [Thresholds.adasStopWindowMs] 안에 정차. 긴급제동이면 HIGH */
+    private fun adasStop(now: Long): DetectionHit? {
+        if (adasStopFired) return null
+        if (!capabilities.isSupported(CapabilityKey.ADAS)) return null
+        val stoppedAt = state.stoppedSinceMs ?: return null
+        val relevant = state.adasOnMs.filterKeys { it != com.alertbridge.engine.model.AdasKind.LANE_DEPARTURE }
+            .filterValues { it <= stoppedAt && stoppedAt - it <= t.adasStopWindowMs }
+        if (relevant.isEmpty()) return null
+        adasStopFired = true
+        val aeb = com.alertbridge.engine.model.AdasKind.EMERGENCY_BRAKING in relevant
+        return DetectionHit(TriggerId.T_ADAS_STOP, now, relevant.values.min(), if (aeb) null else TriggerConfidence.MEDIUM)
+    }
+
+    /** 감속 정차 직후 문이 열림. 주차장에서는 쓰지 않는다. 가장 약한 근거라 LOW로 묻기만 한다. */
+    private fun stopDoor(now: Long): DetectionHit? {
+        if (stopDoorFired) return null
+        val stoppedAt = state.stoppedSinceMs ?: return null
+        val drop = softDropMs ?: return null
+        val doorAt = state.lastDoorOpenMs ?: return null
+        if (doorAt < stoppedAt || doorAt - stoppedAt > t.stopDoorWindowMs) return null
+        if (state.location?.roadType == RoadType.PARKING) return null
+        stopDoorFired = true
+        return DetectionHit(TriggerId.T_STOP_DOOR, now, drop)
     }
 }

@@ -1,0 +1,239 @@
+{
+  "id": "S17_stop_door_not_accident",
+  "description": "감속 정차 후 조수석 문 열림, 승객 하차 (사고 아님)",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "UNKNOWN"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "IMPACT_SENSOR": true,
+    "LOW_TIRE_PRESSURE": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "HAZARD_STATE": false,
+    "FLUID_LEVEL": true,
+    "EV_SOC": false,
+    "LOW_BEAM": true,
+    "WIPER": true
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_RIGHT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_LEFT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": false
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.4952,
+        "lng": 127.0388,
+        "accuracyM": 6,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "역삼로",
+        "address": "서울특별시 강남구 역삼로 180"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 20000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 30.0
+      }
+    },
+    {
+      "tMs": 20000,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 21500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 22.0
+      }
+    },
+    {
+      "tMs": 23000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 14.0
+      }
+    },
+    {
+      "tMs": 24500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 6.0
+      }
+    },
+    {
+      "tMs": 25500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 30000,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": true
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 32000,
+      "question": "IS_ACCIDENT",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_STOP_DOOR",
+    "session": "DISMISSED",
+    "hasCaseCard": false
+  }
+}

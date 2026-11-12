@@ -8,6 +8,7 @@
     <string name="input_gps">GPS</string>
     <string name="input_speed">차속</string>
     <string name="input_pleos">Pleos 차량</string>
+    <string name="input_impact">충격 센서</string>
     <string name="live_inputs">연결된 입력: %1$s</string>
     <string name="play">재생</string>
     <string name="pause">일시정지</string>

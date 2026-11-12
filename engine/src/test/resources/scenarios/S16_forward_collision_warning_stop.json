@@ -1,0 +1,287 @@
+{
+  "id": "S16_forward_collision_warning_stop",
+  "description": "전방 충돌 경고 직후 정차 (충격은 약함 0.9G)",
+  "profile": "profiles/driver_normal.json",
+  "vehicle": {
+    "powertrain": "NON_EV",
+    "sizeClass": "UNKNOWN"
+  },
+  "capabilities": {
+    "SEAT_AIRBAG_DEPLOYED": true,
+    "SEAT_OCCUPANCY": true,
+    "SEAT_BELT_BUCKLED": true,
+    "DOOR_POSITION": true,
+    "TURN_SIGNAL": true,
+    "BRAKE_PEDAL": true,
+    "STEERING_ANGLE": true,
+    "VEHICLE_SPEED": true,
+    "LOCATION": true,
+    "IMPACT_SENSOR": true,
+    "LOW_TIRE_PRESSURE": true,
+    "POWER_DOWN_WARNING": true,
+    "TELLTALES": true,
+    "HAZARD_STATE": false,
+    "FLUID_LEVEL": true,
+    "EV_SOC": false,
+    "LOW_BEAM": true,
+    "WIPER": true,
+    "ADAS": true
+  },
+  "events": [
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_LEFT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_LEFT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW1_RIGHT",
+        "occupied": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW1_RIGHT",
+        "buckled": true
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_LEFT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_LEFT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatOccupancy",
+        "seat": "ROW2_RIGHT",
+        "occupied": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatBeltBuckled",
+        "seat": "ROW2_RIGHT",
+        "buckled": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_LEFT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "SeatAirbagDeployed",
+        "seat": "ROW1_RIGHT",
+        "deployed": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW1_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_LEFT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "DoorPosition",
+        "door": "ROW2_RIGHT",
+        "open": false
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "TurnSignalState",
+        "state": "NONE"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": false
+      }
+    },
+    {
+      "tMs": 1000,
+      "signal": {
+        "type": "Location",
+        "lat": 37.5172,
+        "lng": 127.0473,
+        "accuracyM": 6,
+        "roadType": "URBAN",
+        "roadTypeConfidence": 0.9,
+        "roadName": "올림픽대로",
+        "address": "서울특별시 송파구 올림픽대로"
+      }
+    },
+    {
+      "tMs": 0,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 40.0
+      }
+    },
+    {
+      "tMs": 30000,
+      "signal": {
+        "type": "AdasWarning",
+        "kind": "FORWARD_COLLISION",
+        "active": true
+      }
+    },
+    {
+      "tMs": 30200,
+      "signal": {
+        "type": "BrakeState",
+        "pedalPressed": true
+      }
+    },
+    {
+      "tMs": 31500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 34.0
+      }
+    },
+    {
+      "tMs": 32000,
+      "signal": {
+        "type": "ImpactAccel",
+        "peakG": 0.9,
+        "longitudinalG": -0.9,
+        "lateralG": 0.1
+      }
+    },
+    {
+      "tMs": 33000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 26.0
+      }
+    },
+    {
+      "tMs": 34500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 18.0
+      }
+    },
+    {
+      "tMs": 36000,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 10.0
+      }
+    },
+    {
+      "tMs": 37500,
+      "signal": {
+        "type": "VehicleSpeed",
+        "kmh": 0.0
+      }
+    },
+    {
+      "tMs": 38000,
+      "signal": {
+        "type": "AdasWarning",
+        "kind": "FORWARD_COLLISION",
+        "active": false
+      }
+    }
+  ],
+  "triage": [
+    {
+      "tMs": 40000,
+      "question": "IS_ACCIDENT",
+      "answer": "YES"
+    },
+    {
+      "tMs": 42500,
+      "question": "INJURY",
+      "answer": "NO"
+    },
+    {
+      "tMs": 45000,
+      "question": "FIRE_SMOKE",
+      "answer": "NO"
+    },
+    {
+      "tMs": 47500,
+      "question": "DRIVABLE",
+      "answer": "YES"
+    },
+    {
+      "tMs": 50000,
+      "question": "OTHER_PARTY_FLED",
+      "answer": "NO"
+    },
+    {
+      "tMs": 52500,
+      "question": "OTHER_PARTY_SUSPICIOUS",
+      "answer": "NO"
+    }
+  ],
+  "expected": {
+    "trigger": "T_ADAS_STOP",
+    "severity": "S1",
+    "impactZonesEmpty": true,
+    "mustContainActions": [
+      "CALL_INSURER_CLAIM"
+    ],
+    "hasCaseCard": true,
+    "photoCheck": true
+  }
+}

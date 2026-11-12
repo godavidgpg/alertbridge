@@ -30,6 +30,8 @@ data class IncidentBrief(
     val rulePlanTop: List<String>,
     /** R0(인명 위험)면 AI 조치보다 119가 먼저다 */
     val lifeThreatening: Boolean,
+    /** 고속도로 무료 긴급견인(한국도로공사 1588-2504) 대상일 수 있음. 규칙 엔진 판단 */
+    val freeTow2504: Boolean = false,
 )
 
 @Serializable
@@ -57,6 +59,7 @@ object IncidentBriefs {
             location = loc?.let { BriefLocation(it.lat, it.lng, it.address, it.roadName, it.roadType.name, it.roadTypeConfidence) },
             rulePlanTop = r.plan.actions.take(4).map { it.id.name },
             lifeThreatening = RiskGrade.R0 in r.risk.has,
+            freeTow2504 = r.plan.actions.any { it.id == com.alertbridge.engine.model.ActionId.CALL_2504 },
         )
     }
 }

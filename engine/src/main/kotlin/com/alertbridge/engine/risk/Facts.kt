@@ -145,7 +145,9 @@ object FactBuilder {
         val size = c.vehicle?.sizeClass ?: VehicleSizeClass.UNKNOWN
         val sizeOk = size in c.policy.tow2504SizeClasses || (size == VehicleSizeClass.UNKNOWN && t.allow2504WhenSizeUnknown)
         val towRoad = road != null && road in c.policy.tow2504RoadTypes
-        set(Fact.ELIGIBLE_2504, towRoad && sizeOk && (notDrivable || Fact.EXPRESSWAY_STOPPED in f))
+        // 운전자가 고속도로라고 답했고 차를 움직일 수 없으면 1588-2504를 안내한다.
+        // 전화로 대상 여부를 묻는 것이라 도로 판정이 불확실해도 안내하는 쪽이 낫다.
+        set(Fact.ELIGIBLE_2504, sizeOk && ((towRoad && (notDrivable || Fact.EXPRESSWAY_STOPPED in f)) || (Fact.EXPRESSWAY_REPORTED_BY_USER in f && notDrivable)))
 
         val guardian = c.driver?.guardianPhone != null
         set(Fact.GUARDIAN_REGISTERED, guardian)

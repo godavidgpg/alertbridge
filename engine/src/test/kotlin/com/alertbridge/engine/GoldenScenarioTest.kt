@@ -14,9 +14,10 @@ import kotlin.test.assertTrue
 class GoldenScenarioTest {
 
     @Test
-    fun `필수 시나리오 12개가 모두 있다`() {
+    fun `필수 시나리오 12개와 센서 감지 시나리오 5개가 모두 있다`() {
         val ids = Fixtures.scenarios.map { it.id.take(3) }.toSet()
-        assertEquals((1..12).map { "S%02d".format(it) }.toSet(), ids)
+        // S01~S12: 지시문의 필수 시나리오. S13~S17: 충격·주행 보조 경고·문 열림 감지 (급정거 없는 접촉 사고)
+        assertEquals((1..17).map { "S%02d".format(it) }.toSet(), ids)
     }
 
     @TestFactory
