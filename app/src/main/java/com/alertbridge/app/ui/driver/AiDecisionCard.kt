@@ -57,6 +57,7 @@ internal fun AiDecisionCard(s: UiState, vm: AppViewModel) {
         SectionTitle(stringResource(R.string.ai_title)) {
             done?.let { SourcePill(it.decision.source) }
         }
+        Text(stringResource(R.string.ai_mock_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         when (val a = s.advisor) {
             AdvisorUi.Idle -> {
                 Text(stringResource(R.string.ai_idle_body), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -78,9 +79,7 @@ internal fun AiDecisionCard(s: UiState, vm: AppViewModel) {
 @Composable
 private fun SourcePill(src: DecisionSource) {
     // Claude가 판단했을 때만 출처를 붙인다. 규칙 기반 대체 판단은 운전자에게 따로 이름 붙이지 않는다.
-    if (src == DecisionSource.AI) {
-        StatusPill(stringResource(R.string.ai_source_ai), MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
-    }
+    StatusPill(stringResource(if (src == DecisionSource.AI) R.string.ai_source_ai else R.string.ai_source_rules), MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
 }
 
 private fun won(v: Long) = NumberFormat.getInstance(Locale.KOREA).format(v) + "원"

@@ -16,15 +16,15 @@
     <!-- ① ② 질문 -->
     <string name="d_countdown_confirm">%1$d초 안에 답이 없으면 구조 안내로 넘어가요</string>
     <string name="d_countdown">%1$d초 뒤 다음 질문으로 넘어가요</string>
-    <string name="d_voice_title">음성으로 답해 주세요</string>
-    <string name="d_voice_body">운전 중에는 화면을 보지 마세요. 질문을 읽어 드릴게요.</string>
+    <string name="d_voice_title">안전하게 정차해 주세요</string>
+    <string name="d_voice_body">운전 중에는 화면을 조작하지 마세요. 정차 후 응답해 주세요.</string>
 
     <!-- ③ 대응 계획 -->
     <string name="d_plan_title">지금 할 일</string>
     <string name="d_no_response_title">응답이 없어요</string>
     <string name="d_no_response_body">말하기 어려우면 천장 근처의 SOS 버튼을 누르세요. 119 연결도 직접 눌러야 시작돼요.</string>
     <string name="d_guardian_sent">보호자에게 알렸어요</string>
-    <string name="d_guardian_auto">미리 동의하신 대로 자동으로 알려요</string>
+    <string name="d_guardian_auto">보호자 알림은 미연동 상태입니다. 직접 연락해 주세요.</string>
     <string name="d_connect">연결</string>
     <string name="d_notify">알리기</string>
     <string name="d_done">했어요</string>

@@ -111,7 +111,10 @@ class MainActivity : ComponentActivity() {
         if (!BuildConfig.DEBUG) return
         val id = intent?.getStringExtra("scenario") ?: return
         if (id == "live") { vm.startLive(); return }
-        vm.scenarios.firstOrNull { it.id.startsWith(id) }?.let(vm::start)
+        vm.scenarios.firstOrNull { it.id == id || it.id.substringBefore("_") == id }?.let {
+            vm.setAutoAnswers(intent.getBooleanExtra("autoAnswers", false))
+            vm.start(it)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -163,7 +166,7 @@ private fun TopBar(s: UiState, tab: Int, onTab: (Int) -> Unit, onSource: () -> U
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    s.scenario?.let { "${it.id.take(3)} · ${it.description.substringBefore(",")}" } ?: stringResource(R.string.mode_live),
+                    s.scenario?.let { "모의 신호 · ${it.id.take(3)} · ${it.description.substringBefore(",")}" } ?: stringResource(R.string.mode_live),
                     style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, maxLines = 1,
                 )
                 Icon(Icons.Filled.KeyboardArrowDown, null, tint = MaterialTheme.colorScheme.primary)
