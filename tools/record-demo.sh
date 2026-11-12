@@ -5,7 +5,7 @@ SDK_DIR="${ANDROID_HOME:-$REPO_DIR/../android-sdk}"
 ADB="$SDK_DIR/platform-tools/adb"
 OUTPUT_DIR="${DEMO_OUTPUT_DIR:-$REPO_DIR/../../outputs/시연영상}"
 SCENARIO="${1:-S13}"
-SECONDS_TO_RECORD="${2:-30}"
+SECONDS_TO_RECORD="${2:-45}"
 case "$SCENARIO" in S13|S06|S03) ;; *) echo '지원 시나리오: S13 시내 추돌 / S06 고속도로 고장 / S03 중대 사고'; exit 1;; esac
 case "$SECONDS_TO_RECORD" in ''|*[!0-9]*) echo '녹화 시간은 초 단위 정수입니다.'; exit 1;; esac
 if (( SECONDS_TO_RECORD < 5 || SECONDS_TO_RECORD > 180 )); then echo '녹화 시간: 5~180초'; exit 1; fi
